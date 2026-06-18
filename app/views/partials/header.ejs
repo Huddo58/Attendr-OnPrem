@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="icon" type="image/png" href="/img/attendr.png">
+
+<head>
+    <meta charset="UTF-8" />
+    <title><%= pageTitle || "Attenddr" %></title>
+
+    <!-- GLOBAL BRANDING VARIABLES + BASE STYLES -->
+    <style>
+        <%
+            const brandColor = branding?.brand_color || '#0d2b4d';
+        %>
+
+        :root {
+            --brand-color: <%= brandColor %>;
+            --primary-color: <%= brandColor %>;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", Arial, sans-serif;
+            /* ✅ Dynamic gradient — base colour from branding settings */
+            background: linear-gradient(
+                to bottom right,
+                <%= branding.brand_color_light || '#6ea0c8' %>,
+                <%= brandColor %>
+            );
+            min-height: 100vh;
+        }
+
+        /* HEADER BAR */
+        .header {
+            width: 100%;
+            height: 95px;
+            background: rgba(255,255,255,0.10);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            box-sizing: border-box;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .logo img {
+            height: 60px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+        }
+
+        .org-name {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 380px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 13px;
+        }
+
+        .admin-btn {
+            padding: 7px 14px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255,255,255,0.18);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255,255,255,0.28);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 8px 13px;
+            border-radius: 25px;
+            width: 260px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .logout-link {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .logout-link:hover { text-decoration: underline; }
+
+        #header-datetime {
+            font-weight: 500;
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .settings-tabs {
+            width: 100%;
+            display: flex;
+            gap: 25px;
+            padding: 15px 40px;
+            background: rgba(255,255,255,0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.25);
+            backdrop-filter: blur(4px);
+            font-weight: 600;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .settings-tab {
+            cursor: pointer;
+            padding-bottom: 6px;
+            border-bottom: 2px solid transparent;
+            font-size: 14px;
+        }
+
+        .settings-tab a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .settings-tab.active { border-bottom-color: #fff; }
+
+        .content-wrapper {
+            width: 85%;
+            margin: 30px auto;
+            background: rgba(255,255,255,0.90);
+            border-radius: 12px;
+            padding: 25px 30px 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            box-sizing: border-box;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+
+        .section-subtitle {
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            padding: 8px 16px;
+            background: var(--brand-color);
+            color: #fff;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover { opacity: 0.88; }
+
+        .footer {
+            width: 100%;
+            text-align: center;
+            color: white;
+            opacity: 0.75;
+            font-size: 12px;
+            padding: 20px 0;
+        }
+    </style>
+
+    <!-- ✅ Gradient override — always applied after base styles -->
+    <style>
+        body {
+            background: linear-gradient(
+                to bottom right,
+                <%= branding.brand_color_light || '#6ea0c8' %>,
+                <%= branding.brand_color || '#0d2b4d' %>
+            ) !important;
+        }
+    </style>
+
+    <% if (typeof pageStyles !== "undefined" && pageStyles) { %>
+        <style>
+            <%- pageStyles %>
+        </style>
+    <% } %>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="logo">
+            <%
+                /* ✅ Use custom logo if set, otherwise fall back to Attenddr default */
+                const logoSrc = (branding && branding.logo_path)
+                    ? branding.logo_path
+                    : '/img/attendr.png';
+            %>
+            <img src="<%= logoSrc %>" alt="Logo" />
+        </div>
+        <div class="org-name">
+            <%= (settings && settings.org_name) ? settings.org_name : "Attenddr" %>
+        </div>
+    </div>
+
+    <div class="header-right">
+        <a href="/dashboard" class="admin-btn">Dashboard</a>
+
+        <% if (typeof hideNav === "undefined" || !hideNav) { %>
+            <div class="search-box">
+                <input id="admin-search" placeholder="Search" />
+            </div>
+        <% } %>
+
+        <div id="header-datetime"></div>
+
+        <div>
+            Logged in as
+            <strong><%= user && user.name ? user.name : "Admin" %></strong> |
+            <a href="/logout" class="logout-link">Logout</a>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Admin nav tabs — hidden on profile page via hideNav flag -->
+<% if (typeof hideNav === "undefined" || !hideNav) { %>
+<div class="settings-tabs">
+    <div class="settings-tab <%= activeTab === 'users' ? 'active' : '' %>">
+        <a href="/admin/settings/users">Users</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'departments' ? 'active' : '' %>">
+        <a href="/admin/settings/departments">Departments</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'locations' ? 'active' : '' %>">
+        <a href="/admin/settings/locations">Locations</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'statuses' ? 'active' : '' %>">
+        <a href="/admin/settings/statuses">Statuses</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'logs' ? 'active' : '' %>">
+        <a href="/admin/logs">Logs</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'branding' ? 'active' : '' %>">
+        <a href="/admin/settings/branding">Branding</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'settings' ? 'active' : '' %>">
+        <a href="/admin/settings">Settings</a>
+    </div>
+    <div class="settings-tab <%= activeTab === 'integrations' ? 'active' : '' %>">
+        <a href="/admin/integrations">Integrations</a>
+    </div>
+</div>
+<% } %>
+
+<script>
+(function () {
+    const el = document.getElementById("header-datetime");
+    if (!el) return;
+    function updateTime() { el.textContent = new Date().toLocaleString(); }
+    updateTime();
+    setInterval(updateTime, 1000);
+})();
+</script>
+
+<% if (typeof hideNav === "undefined" || !hideNav) { %>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("admin-search");
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", function () {
+        const query = this.value.toLowerCase().trim();
+        const table = document.querySelector(".content-wrapper table");
+        if (!table) return;
+        table.querySelectorAll("tbody tr").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(query) ? "" : "none";
+        });
+    });
+});
+</script>
+<% } %>
+
+<% if (query && query.error === "license_expired_admin") { %>
+<div class="popup-overlay" style="display:flex;" id="adminLicenseNotice">
+    <div class="popup-box">
+        <div class="popup-header">
+            <div>Licence Expired</div>
+        </div>
+        <div class="popup-content">
+            <p>Your Attenddr licence has expired.</p>
+            <p>Administrative functionality is currently locked.</p>
+            <p>Please apply a new licence to restore full system access.</p>
+        </div>
+        <div class="popup-actions">
+            <button class="popup-btn save" onclick="goToLicenseSettings()">Manage Licence</button>
+        </div>
+    </div>
+</div>
+<script>
+function goToLicenseSettings() { window.location.href = "/admin/settings"; }
+</script>
+<% } %>
+
+<div class="content-wrapper">

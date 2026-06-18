@@ -1,0 +1,531 @@
+<%- include("partials/header", {
+    pageTitle: isOwnProfile ? "Attenddr - My Profile" : "Attenddr - User Profile",
+    activeTab: isAdmin && !isOwnProfile ? "users" : "",
+    hideNav: !(isAdmin && !isOwnProfile),
+    query: query,
+    pageStyles: `
+
+        .profile-page {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* PROFILE HEADER CARD */
+        .profile-header {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid #e0e0e0;
+            padding: 28px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* AVATAR */
+        .avatar-wrap { position: relative; flex-shrink: 0; }
+
+        .avatar-circle {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+        }
+
+        .avatar-initials {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid var(--primary-color);
+            letter-spacing: 1px;
+        }
+
+        .profile-info h2 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .profile-info .email { font-size: 14px; color: #666; margin-bottom: 8px; }
+
+        .profile-info .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-role-admin { background: #cce5ff; color: #004085; }
+        .badge-role-user  { background: #e2e3e5; color: #383d41; }
+        .badge-azure      { background: #cce5ff; color: #004085; }
+        .badge-ldap       { background: #fff3cd; color: #856404; }
+        .badge-local      { background: #e2e3e5; color: #383d41; }
+
+        /* SECTION CARDS */
+        .profile-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .profile-card-header {
+            padding: 14px 20px;
+            background: #f4f7fb;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .profile-card-header .card-subtitle {
+            font-size: 12px;
+            font-weight: 400;
+            color: #777;
+            margin-top: 2px;
+        }
+
+        .profile-card-body { padding: 20px; }
+
+        /* FORM FIELDS */
+        .field-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+
+        .field-row:last-child { margin-bottom: 0; }
+
+        .field-label {
+            width: 160px;
+            flex-shrink: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .field-value { flex: 1; font-size: 14px; color: #222; }
+        .field-value.empty { color: #aaa; font-style: italic; }
+
+        .field-input {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(13,43,77,0.1);
+        }
+
+        .field-select {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .field-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(13,43,77,0.1);
+        }
+
+        /* BUTTONS */
+        .btn-save {
+            padding: 8px 18px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save:hover { opacity: 0.88; }
+
+        .btn-danger {
+            padding: 8px 14px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover { opacity: 0.88; }
+
+        /* PHOTO UPLOAD */
+        .photo-upload-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .photo-file-input { display: none; }
+
+        .photo-label {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .photo-label:hover { background: #e4e4e4; }
+        .photo-filename { font-size: 12px; color: #888; }
+
+        /* ALERTS */
+        .alert {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger  { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* ADMIN TAG */
+        .admin-only-tag {
+            font-size: 10px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin-left: 6px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        /* PREFERENCE HINT */
+        .pref-hint {
+            font-size: 12px;
+            color: #777;
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: #f8f9fc;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+            line-height: 1.6;
+        }
+
+        .profile-backbar {
+            margin-bottom: 16px;
+        }
+
+        .profile-backlink {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .profile-backlink:hover { text-decoration: underline; }
+
+        /* STATUS DOT */
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+    `
+}) %>
+
+<div class="profile-page">
+
+    <% if (isAdmin && !isOwnProfile) { %>
+        <div class="profile-backbar">
+            <a class="profile-backlink" href="/admin/settings/users">Back to Users</a>
+        </div>
+    <% } %>
+
+    <!-- ALERTS -->
+    <% if (query.saved)         { %><div class="alert alert-success">Profile updated.</div><% } %>
+    <% if (query.photo_saved)   { %><div class="alert alert-success">Photo updated.</div><% } %>
+    <% if (query.photo_removed) { %><div class="alert alert-success">Photo removed.</div><% } %>
+    <% if (query.admin_saved)   { %><div class="alert alert-success">Work details updated.</div><% } %>
+    <% if (query.prefs_saved)   { %><div class="alert alert-success">Status preferences saved.</div><% } %>
+    <% if (query.error)         { %><div class="alert alert-danger">Something went wrong. Please try again.</div><% } %>
+    <% if (query.photo_error)   { %>
+        <div class="alert alert-danger">
+            Photo upload failed.
+            <%= query.msg ? decodeURIComponent(query.msg) : 'Please use a jpg, png, gif or webp file under 5MB.' %>
+        </div>
+    <% } %>
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+        <div class="avatar-wrap">
+            <% if (profile.photo_path) { %>
+                <img class="avatar-circle"
+                     src="<%= profile.photo_path %>"
+                     alt="<%= profile.name %>'s photo">
+            <% } else { %>
+                <div class="avatar-initials">
+                    <%= profile.name ? profile.name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase() : '?' %>
+                </div>
+            <% } %>
+        </div>
+
+        <div class="profile-info">
+            <h2><%= profile.name %></h2>
+            <div class="email"><%= profile.email %></div>
+            <div class="badges">
+                <span class="badge badge-role-<%= profile.role %>"><%= profile.role %></span>
+                <span class="badge badge-<%= profile.auth_source || 'local' %>">
+                    <%= profile.auth_source === 'azure' ? 'Microsoft' :
+                        profile.auth_source === 'ldap'  ? 'Active Directory' : 'Local' %>
+                </span>
+                <% if (profile.departments) { %>
+                    <span class="badge" style="background:#e8f4fd;color:#1565c0;">
+                        <%= profile.departments %>
+                    </span>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHOTO UPLOAD -->
+    <% if (isOwnProfile) { %>
+    <div class="profile-card">
+        <div class="profile-card-header">Profile Photo</div>
+        <div class="profile-card-body">
+            <form method="POST" action="/profile/photo" enctype="multipart/form-data">
+                <div class="photo-upload-wrap">
+                    <label class="photo-label" for="photoInput">Choose Photo</label>
+                    <input class="photo-file-input" type="file" id="photoInput" name="photo"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onchange="document.getElementById('photoName').textContent = this.files[0]?.name || ''">
+                    <span class="photo-filename" id="photoName">JPG, PNG, GIF or WebP — max 5MB</span>
+                    <button type="submit" class="btn-save">Upload</button>
+                </div>
+            </form>
+
+            <% if (profile.photo_path) { %>
+                <form method="POST" action="/profile/photo/remove" style="margin-top:12px;">
+                    <button type="submit" class="btn-danger"
+                        onclick="return confirm('Remove your profile photo?')">
+                        Remove Photo
+                    </button>
+                </form>
+            <% } %>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- CONTACT DETAILS -->
+    <% if (isOwnProfile) { %>
+    <div class="profile-card">
+        <div class="profile-card-header">Contact Details</div>
+        <div class="profile-card-body">
+            <form method="POST" action="/profile/phone">
+                <div class="field-row">
+                    <label class="field-label" for="phoneInput">Phone</label>
+                    <input class="field-input" type="text" id="phoneInput" name="phone"
+                        value="<%= profile.phone || '' %>"
+                        placeholder="e.g. 0400 000 000">
+                    <button type="submit" class="btn-save">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- ✅ NEW: STATUS PREFERENCES -->
+    <div class="profile-card">
+        <div class="profile-card-header">
+            Status Preferences
+            <div class="card-subtitle">
+                Automates your status when Attenddr detects your location by IP address
+            </div>
+        </div>
+        <div class="profile-card-body">
+
+            <form method="POST" action="/profile/status-preferences">
+                <% if (isAdmin && !isOwnProfile) { %>
+                    <input type="hidden" name="userId" value="<%= profile.id %>">
+                <% } %>
+
+                <div class="field-row">
+                    <label class="field-label">Default Location</label>
+                    <select class="field-select" name="default_location_id">
+                        <option value="">— Not set —</option>
+                        <% locations.forEach(loc => { %>
+                            <option value="<%= loc.id %>"
+                                <%= profile.default_location_id == loc.id ? 'selected' : '' %>>
+                                <%= loc.name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">Home Status</label>
+                    <select class="field-select" name="home_status_id">
+                        <option value="">— Not set —</option>
+                        <% statuses.forEach(s => { %>
+                            <option value="<%= s.id %>"
+                                <%= profile.home_status_id == s.id ? 'selected' : '' %>>
+                                <%= s.name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">Away Status</label>
+                    <select class="field-select" name="away_status_id">
+                        <option value="">— Not set —</option>
+                        <% statuses.forEach(s => { %>
+                            <option value="<%= s.id %>"
+                                <%= profile.away_status_id == s.id ? 'selected' : '' %>>
+                                <%= s.name %>
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="pref-hint">
+                    <strong>How this works:</strong> When you open the dashboard from a network with a configured CIDR range,
+                    Attenddr detects your location automatically.<br><br>
+                    If you are at your <strong>default location</strong>, your status is set to your <strong>Home Status</strong>.<br>
+                    If you are at a <strong>different detected location</strong>, your status is set to your <strong>Away Status</strong>.<br><br>
+                    Your status updates automatically whenever you move between detected locations.
+                </div>
+
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn-save">Save Preferences</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- WORK DETAILS -->
+    <div class="profile-card">
+        <div class="profile-card-header">
+            Work Details
+            <% if (isAdmin && !isOwnProfile) { %>
+                <span style="font-weight:400;font-size:12px;color:#888;margin-left:8px;">Editing as Admin</span>
+            <% } %>
+        </div>
+        <div class="profile-card-body">
+
+            <% if (isAdmin) { %>
+            <form method="POST" action="/profile/admin-fields">
+                <input type="hidden" name="userId" value="<%= profile.id %>">
+
+                <div class="field-row">
+                    <label class="field-label">
+                        Employee ID
+                        <span class="admin-only-tag">Admin</span>
+                    </label>
+                    <input class="field-input" type="text" name="employee_id"
+                        value="<%= profile.employee_id || '' %>"
+                        placeholder="e.g. EMP001">
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">
+                        Job Title
+                        <span class="admin-only-tag">Admin</span>
+                    </label>
+                    <input class="field-input" type="text" name="job_title"
+                        value="<%= profile.job_title || '' %>"
+                        placeholder="e.g. Systems Administrator">
+                </div>
+
+                <div class="field-row">
+                    <label class="field-label">
+                        Manager
+                        <span class="admin-only-tag">Admin</span>
+                    </label>
+                    <input class="field-input" type="text" name="manager"
+                        value="<%= profile.manager || '' %>"
+                        placeholder="e.g. Jane Smith">
+                </div>
+
+                <div style="margin-top:18px;">
+                    <button type="submit" class="btn-save">Save Work Details</button>
+                </div>
+            </form>
+
+            <% } else { %>
+
+                <div class="field-row">
+                    <div class="field-label">Employee ID</div>
+                    <div class="field-value <%= !profile.employee_id ? 'empty' : '' %>">
+                        <%= profile.employee_id || 'Not set' %>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-label">Job Title</div>
+                    <div class="field-value <%= !profile.job_title ? 'empty' : '' %>">
+                        <%= profile.job_title || 'Not set' %>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-label">Manager</div>
+                    <div class="field-value <%= !profile.manager ? 'empty' : '' %>">
+                        <%= profile.manager || 'Not set' %>
+                    </div>
+                </div>
+
+                <% if (!isOwnProfile && profile.phone) { %>
+                <div class="field-row">
+                    <div class="field-label">Phone</div>
+                    <div class="field-value"><%= profile.phone %></div>
+                </div>
+                <% } %>
+
+            <% } %>
+
+        </div>
+    </div>
+
+    <!-- BACK LINK -->
+    <div style="margin-top:8px;">
+        <a href="/dashboard" style="font-size:13px;color:#666;text-decoration:none;">
+            &larr; Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+<%- include("partials/footer") %>

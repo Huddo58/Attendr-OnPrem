@@ -1,0 +1,29 @@
+</div> <!-- END content-wrapper -->
+
+<div class="footer">
+    © <%= new Date().getFullYear() %> Attendr. Australian Owned And Operated.
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    // Global delete confirmation (ALL delete forms)
+    document.querySelectorAll("form[action*='/delete']").forEach(form => {
+        form.addEventListener("submit", event => {
+
+            const confirmed = confirm(
+                "⚠️ Are you sure?\n\nThis action cannot be undone."
+            );
+
+            if (!confirmed) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>

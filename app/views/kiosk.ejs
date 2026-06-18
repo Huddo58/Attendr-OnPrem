@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="/img/attendr.png">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Attenddr – Kiosk</title>
+<style>
+<%
+    const brandColor = branding?.brand_color || '#0d2b4d';
+%>
+       html, body {
+           margin: 0;
+           height: 100%;
+           width: 100%;
+           overflow: hidden;
+       }
+       body {
+           display: flex;
+           flex-direction: column;
+           font-family: "Inter", Arial, sans-serif;
+           /* ✅ Dynamic gradient from branding settings */
+           background: linear-gradient(
+               to bottom right,
+               <%= branding.brand_color_light || '#6ea0c8' %>,
+               <%= brandColor %>
+           );
+           color: #1a1a1a;
+       }
+       /* ================= HEADER ================= */
+       .header {
+           height: 70px;
+           flex: 0 0 70px;
+           background: rgba(255,255,255,0.10);
+           backdrop-filter: blur(8px);
+           display: flex;
+           align-items: center;
+           justify-content: space-between;
+           padding: 0 36px;
+           border-bottom: 1px solid rgba(255,255,255,0.25);
+           color: #fff;
+       }
+       .logo {
+           width: 150px;
+           display: flex;
+           align-items: center;
+       }
+       .logo img {
+           height: 50px;
+           width: auto;
+           max-width: 150px;
+           object-fit: contain;
+           display: block;
+           filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+           user-select: none;
+       }
+       .header-title {
+           font-size: clamp(18px, 2.2vw, 22px);
+           font-weight: 600;
+           letter-spacing: 0.4px;
+       }
+       .header-spacer { width: 150px; }
+       /* ================= MAIN ================= */
+       .kiosk-wrapper {
+           flex: 1;
+           padding: 12px;
+           box-sizing: border-box;
+           display: flex;
+           flex-direction: column;
+           min-height: 0;
+           overflow: hidden;
+       }
+       .kiosk-subtitle {
+           color: #f0f4ff;
+           font-size: clamp(11px, 1.2vw, 13px);
+           margin-bottom: 10px;
+           opacity: 0.85;
+           flex: 0 0 auto;
+           display: flex;
+           align-items: baseline;
+           justify-content: space-between;
+           gap: 12px;
+       }
+       .kiosk-subtitle .left { white-space: nowrap; }
+       .kiosk-subtitle .right {
+           opacity: 0.65;
+           font-size: clamp(10px, 1.1vw, 12px);
+           white-space: nowrap;
+       }
+       /* ================= GRID ================= */
+       .staff-grid {
+           flex: 1;
+           display: grid;
+           grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+           gap: 12px;
+           align-content: start;
+           min-height: 0;
+           overflow: hidden;
+       }
+       /* ================= CARD ================= */
+       .staff-card {
+           background: rgba(255,255,255,0.96);
+           border-radius: 14px;
+           padding: 14px;
+           box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+           display: flex;
+           flex-direction: column;
+       }
+       .staff-name {
+           font-size: clamp(14px, 2vw, 18px);
+           font-weight: 600;
+           color: #0d2b4d;
+           line-height: 1.25;
+           margin-bottom: 6px;
+           display: -webkit-box;
+           -webkit-line-clamp: 2;
+           line-clamp: 2;
+           -webkit-box-orient: vertical;
+           overflow: hidden;
+       }
+       .status-badge {
+           align-self: flex-start;
+           margin-bottom: 10px;
+           padding: 6px 14px;
+           border-radius: 999px;
+           font-size: clamp(11px, 1.4vw, 13px);
+           font-weight: 600;
+           color: #fff;
+           display: inline-flex;
+           align-items: center;
+           justify-content: center;
+           white-space: nowrap;
+           max-width: 160px;
+           overflow: hidden;
+           text-overflow: ellipsis;
+           box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+       }
+       .staff-meta-row {
+           display: flex;
+           flex-direction: column;
+           gap: 4px;
+           font-size: clamp(10px, 1.2vw, 12px);
+       }
+       .staff-meta-row > div {
+           display: flex;
+           gap: 6px;
+           line-height: 1.3;
+       }
+       .meta-label { min-width: 58px; font-weight: 600; color: #555; }
+       .meta-value { color: #222; flex: 1; word-break: break-word; }
+       /* ================= STATUS COLOURS ================= */
+       .black { background:#000; }
+       .darkgrey { background:#333; }
+       .grey { background:#777; }
+       .lightgrey { background:#ccc; color:#000; }
+       .white { background:#fff; color:#000; }
+       .navy { background:#001f3f; }
+       .blue { background:#005DFF; }
+       .sky { background:#66B2FF; }
+       .cyan { background:#00bcd4; }
+       .teal { background:#009688; }
+       .darkgreen { background:#014421; }
+       .green { background:#2ecc71; }
+       .lightgreen { background:#7bed9f; color:#000; }
+       .mint { background:#98ffcc; color:#000; }
+       .lime { background:#c6ff00; color:#000; }
+       .maroon { background:#800000; }
+       .red { background:#ff2f2f; }
+       .orange { background:#ff851b; }
+       .amber { background:#ffbf00; color:#000; }
+       .coral { background:#ff7f50; }
+       .purple { background:#7d3cff; }
+       .violet { background:#8e44ad; }
+       .indigo { background:#3f51b5; }
+       .magenta { background:#ff00aa; }
+       .pink { background:#ff78c4; }
+       .gold { background:#d4af37; }
+       .rose { background:#ffb6c1; color:#000; }
+       .slate { background:#6c7a89; }
+       .brown { background:#8b4513; }
+       .aqua { background:#30e3ca; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">
+        <%
+            /* ✅ Use custom logo if set, otherwise fall back to Attenddr default */
+            const kioskLogo = (branding && branding.logo_path)
+                ? branding.logo_path
+                : '/img/attendr.png';
+        %>
+        <img src="<%= kioskLogo %>" alt="Logo">
+    </div>
+    <div class="header-title">Staff Presence</div>
+    <div class="header-spacer"></div>
+</div>
+
+<div class="kiosk-wrapper">
+    <div class="kiosk-subtitle">
+        <div class="left">
+            Live view of staff status, location and return time.
+            <span style="opacity:0.6;">Auto-refreshes every minute.</span>
+        </div>
+        <div class="right" id="pageIndicator"></div>
+    </div>
+    <div class="staff-grid" id="grid"></div>
+</div>
+
+<script>
+   const USERS = <%- JSON.stringify(users || []) %>;
+   const grid = document.getElementById("grid");
+   const pageIndicator = document.getElementById("pageIndicator");
+
+   function formatReturnAU(raw) {
+       if (!raw) return "Unspecified";
+       const d = new Date(String(raw).replace(" ", "T"));
+       if (isNaN(d.getTime())) return "Unspecified";
+       const day   = String(d.getDate()).padStart(2, "0");
+       const month = String(d.getMonth() + 1).padStart(2, "0");
+       const year  = d.getFullYear();
+       let hours   = d.getHours();
+       const mins  = String(d.getMinutes()).padStart(2, "0");
+       const ampm  = hours >= 12 ? "pm" : "am";
+       hours = hours % 12 || 12;
+       const hh = String(hours).padStart(2, "0");
+       return `${day}/${month}/${year}, ${hh}:${mins} ${ampm}`;
+   }
+
+   function statusClassFor(u) {
+       const stName = (u && u.status_name) ? u.status_name : "Unspecified";
+       if (stName === "Unspecified") return "black";
+       return (u && u.status_color) ? u.status_color : "black";
+   }
+
+   function statusNameFor(u) {
+       return (u && u.status_name) ? u.status_name : "Unspecified";
+   }
+
+   function safeText(v, fallback) {
+       if (v === null || v === undefined || String(v).trim() === "") return fallback;
+       return String(v);
+   }
+
+   function createCard(u) {
+       const card = document.createElement("div");
+       card.className = "staff-card";
+
+       const name = document.createElement("div");
+       name.className = "staff-name";
+       name.textContent = safeText(u.name, "");
+       card.appendChild(name);
+
+       const badge = document.createElement("span");
+       badge.className = "status-badge " + statusClassFor(u);
+       badge.textContent = statusNameFor(u);
+       card.appendChild(badge);
+
+       const meta = document.createElement("div");
+       meta.className = "staff-meta-row";
+
+       const row1 = document.createElement("div");
+       row1.innerHTML = `<span class="meta-label">Location:</span><span class="meta-value"></span>`;
+       row1.querySelector(".meta-value").textContent = safeText(u.location_name, "Unspecified");
+
+       const row2 = document.createElement("div");
+       row2.innerHTML = `<span class="meta-label">Return:</span><span class="meta-value"></span>`;
+       row2.querySelector(".meta-value").textContent = formatReturnAU(u.returning_at);
+
+       meta.appendChild(row1);
+       meta.appendChild(row2);
+       card.appendChild(meta);
+       return card;
+   }
+
+   // Paging engine
+   let currentPage = 0;
+   let pageCount   = 1;
+   let pageSize    = USERS.length;
+   let rotateTimer = null;
+   const ROTATE_SECONDS = 18;
+
+   function getGapPx() {
+       const cs    = window.getComputedStyle(grid);
+       const g     = cs.gap || cs.gridGap || "0px";
+       const first = String(g).split(" ")[0];
+       const px    = parseFloat(first);
+       return Number.isFinite(px) ? px : 0;
+   }
+
+   function getColumnCount() {
+       const cs   = window.getComputedStyle(grid);
+       const cols = cs.gridTemplateColumns;
+       if (!cols) return 1;
+       return cols.split(" ").filter(Boolean).length;
+   }
+
+   function measureCardHeight() {
+       const tmp = createCard(USERS[0] || { name: "Test", status_name: "In Office", status_color: "blue" });
+       tmp.style.visibility = "hidden";
+       tmp.style.position   = "absolute";
+       tmp.style.left       = "-9999px";
+       tmp.style.top        = "-9999px";
+       document.body.appendChild(tmp);
+       const h = tmp.getBoundingClientRect().height;
+       tmp.remove();
+       return h;
+   }
+
+   function computePageSize() {
+       const cols    = Math.max(1, getColumnCount());
+       const gap     = getGapPx();
+       const cardH   = Math.max(1, measureCardHeight());
+       const usableH = grid.getBoundingClientRect().height;
+       const rows    = Math.max(1, Math.floor((usableH + gap) / (cardH + gap)));
+       pageSize  = Math.max(1, rows * cols);
+       pageCount = Math.max(1, Math.ceil(USERS.length / pageSize));
+       if (currentPage >= pageCount) currentPage = 0;
+   }
+
+   function renderPage() {
+       grid.innerHTML = "";
+       const start = currentPage * pageSize;
+       const end   = Math.min(USERS.length, start + pageSize);
+       for (let i = start; i < end; i++) {
+           grid.appendChild(createCard(USERS[i]));
+       }
+       if (pageCount > 1) {
+           pageIndicator.textContent =
+               `Page ${currentPage + 1} of ${pageCount} · Showing ${end - start} of ${USERS.length}`;
+       } else {
+           pageIndicator.textContent = `${USERS.length} staff`;
+       }
+   }
+
+   function startRotation() {
+       if (rotateTimer) clearInterval(rotateTimer);
+       if (pageCount <= 1) return;
+       rotateTimer = setInterval(() => {
+           currentPage = (currentPage + 1) % pageCount;
+           renderPage();
+       }, ROTATE_SECONDS * 1000);
+   }
+
+   function initKiosk() {
+       computePageSize();
+       renderPage();
+       startRotation();
+   }
+
+   window.addEventListener("load", () => { initKiosk(); });
+
+   let resizeTimer = null;
+   window.addEventListener("resize", () => {
+       if (resizeTimer) clearTimeout(resizeTimer);
+       resizeTimer = setTimeout(() => { initKiosk(); }, 250);
+   });
+
+   // Full reload every 60 seconds to pick up status changes
+   setTimeout(() => window.location.reload(), 36000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+<%- include('../partials/header', {
+    pageTitle: "Audit Logs",
+    activeTab: "logs",
+    user,
+    settings,
+    branding
+}) %>
+
+<style>
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 12px;
+}
+
+.log-search {
+    width: 240px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #111;
+    color: #fff;
+    font-size: 13px;
+    margin-top: 25px;
+    margin-right: 25px;
+}
+
+.log-search::placeholder {
+    color: #888;
+}
+
+.logs-container {
+    background: #0b0b0b;
+    color: #e5e5e5;
+    font-family: Consolas, Monaco, monospace;
+    padding: 14px;
+    border-radius: 8px;
+    max-height: 70vh;
+    overflow-y: auto;
+    font-size: 13px;
+}
+
+.log-entry {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-header {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    opacity: 0.9;
+    margin-bottom: 4px;
+}
+
+.log-time {
+    color: #8ab4f8;
+}
+
+.log-actor {
+    color: #7ee787;
+    font-weight: 600;
+}
+
+.log-body {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin: 2px 0;
+}
+
+.log-action {
+    color: #d2a8ff;
+    font-weight: 600;
+}
+
+.log-target {
+    color: #ffa657;
+}
+
+.log-empty {
+    opacity: 0.6;
+    padding: 10px;
+}
+</style>
+
+<div class="logs-header">
+    <div>
+        <h2 class="section-title">Audit Logs</h2>
+        <p class="section-subtitle">
+            Showing the most recent administrative actions.
+        </p>
+    </div>
+
+    <input
+        type="text"
+        id="logSearch"
+        class="log-search"
+        placeholder="Search logs…"
+    />
+</div>
+
+<div class="logs-container">
+    <% if (!logs || logs.length === 0) { %>
+        <div class="log-empty">No log entries found.</div>
+    <% } %>
+
+    <% logs.forEach(log => { %>
+        <div class="log-entry">
+
+            <!-- HEADER -->
+            <div class="log-header">
+                <span class="log-time" data-raw="<%= log.timestamp %>">
+                    [
+                    <%= log.timestamp %>
+                    ]
+                </span>
+
+                <span class="log-actor">
+                    <%= log.user_name || 'System' %>
+                    (<%= log.user_role || 'system' %>)
+                </span>
+            </div>
+
+            <!-- ACTION -->
+            <div class="log-body">
+                <span class="log-action"><%= log.action %></span>
+
+                <% if (log.target_name) { %>
+                    <span>on</span>
+                    <span class="log-target"><%= log.target_name %></span>
+                <% } else if (log.entity) { %>
+                    <span>on</span>
+                    <span class="log-target">
+                        <%= log.entity %>
+                        <% if (log.entity_id) { %>
+                            #<%= log.entity_id %>
+                        <% } %>
+                    </span>
+                <% } %>
+            </div>
+
+        </div>
+    <% }) %>
+</div>
+
+<script>
+function formatAusDate(raw) {
+    if (!raw) return "";
+
+    // If it's already ISO, leave it. If it's SQLite "YYYY-MM-DD HH:MM:SS", make it "YYYY-MM-DDTHH:MM:SS"
+    const iso = raw.includes("T") ? raw : raw.replace(" ", "T");
+
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return raw;
+
+    return d.toLocaleString("en-AU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+    });
+}
+
+// Format all log timestamps in the browser (correct local time)
+document.querySelectorAll(".log-time").forEach(el => {
+    const raw = el.getAttribute("data-raw") || "";
+    const formatted = formatAusDate(raw);
+    if (formatted) el.innerText = `[${formatted}]`;
+});
+
+document.getElementById("logSearch")?.addEventListener("input", function () {
+    const term = this.value.toLowerCase();
+
+    document.querySelectorAll(".log-entry").forEach(entry => {
+        const text = entry.innerText.toLowerCase();
+        entry.style.display = text.includes(term) ? "" : "none";
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>

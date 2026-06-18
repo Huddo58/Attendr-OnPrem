@@ -1,0 +1,516 @@
+<%- include("../partials/header", {
+    pageTitle: "Attenddr – Branding",
+    activeTab: "branding",
+    query: query,
+    pageStyles: `
+
+        .branding-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .brand-card {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #dde3ed;
+            overflow: hidden;
+        }
+
+        .brand-card-header {
+            padding: 14px 20px;
+            background: #f4f7fb;
+            border-bottom: 1px solid #dde3ed;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .brand-card-header .card-sub {
+            font-size: 12px;
+            font-weight: 400;
+            color: #777;
+            margin-top: 2px;
+        }
+
+        .brand-card-body { padding: 22px; }
+
+        .alert {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger  { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .swatches {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .swatch {
+            aspect-ratio: 1;
+            min-height: 80px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .swatch:hover { transform: scale(1.08); }
+
+        .swatch.selected {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2563eb;
+        }
+
+        .swatch .swatch-check {
+            display: none;
+            position: absolute;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .swatch.selected .swatch-check { display: flex; }
+
+        .swatch-label {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .advanced-section {
+            border-top: 1px solid #eee;
+            padding-top: 18px;
+            margin-top: 4px;
+        }
+
+        .advanced-toggle {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2563eb;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .advanced-toggle svg { transition: transform 0.2s; }
+        .advanced-toggle.open svg { transform: rotate(180deg); }
+        .advanced-content { display: none; }
+        .advanced-content.visible { display: block; }
+
+        .color-input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .color-picker-input {
+            width: 52px;
+            height: 42px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+            background: white;
+        }
+
+        .hex-input {
+            flex: 1;
+            padding: 10px 13px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+            text-transform: uppercase;
+        }
+
+        .hex-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+        }
+
+        .color-preview {
+            margin-top: 18px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #dde3ed;
+        }
+
+        .preview-gradient {
+            height: 80px;
+            transition: background 0.3s;
+        }
+
+        .preview-label {
+            padding: 8px 14px;
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fc;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-save {
+            padding: 10px 22px;
+            background: #0d2b4d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 18px;
+            transition: opacity 0.15s;
+        }
+        .btn-save:hover { opacity: 0.88; }
+
+        .btn-reset {
+            padding: 10px 18px;
+            background: white;
+            color: #555;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 18px;
+            margin-left: 10px;
+            transition: background 0.15s;
+        }
+        .btn-reset:hover { background: #f0f0f0; }
+
+        .logo-preview-wrap {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+
+        .logo-preview-img {
+    height: 60px;
+    width: auto;
+    max-width: 200px;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+}
+
+        .logo-preview-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ✅ Upload area — pointer-events only on the label, not the input */
+        .logo-upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.15s;
+            cursor: pointer;
+        }
+
+        .logo-upload-area:hover { border-color: #2563eb; }
+
+        label.logo-upload-area { display: block; }
+
+        .logo-upload-icon {
+            width: 40px;
+            height: 40px;
+            background: #f0f4ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: #2563eb;
+        }
+
+        .logo-upload-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .logo-upload-hint { font-size: 12px; color: #888; }
+
+        .logo-selected-name {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #2563eb;
+            font-weight: 500;
+        }
+
+        .btn-danger {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-danger:hover { opacity: 0.88; }
+    `
+}) %>
+
+<div class="section-title">Branding</div>
+<div class="section-subtitle">
+    Customise the background colour and logo used across the entire application.
+</div>
+
+<!-- ALERTS -->
+<% if (query.color_saved)   { %><div class="alert alert-success">Brand colour saved successfully.</div><% } %>
+<% if (query.logo_saved)    { %><div class="alert alert-success">Logo uploaded successfully.</div><% } %>
+<% if (query.logo_removed)  { %><div class="alert alert-success">Logo removed. Default Attenddr logo restored.</div><% } %>
+<% if (query.reset)         { %><div class="alert alert-success">Branding reset to Attenddr defaults.</div><% } %>
+<% if (query.error)         { %><div class="alert alert-danger">Error: <%= decodeURIComponent(query.error) %></div><% } %>
+
+<div class="branding-grid">
+
+    <!-- LEFT: BRAND COLOUR -->
+    <div class="brand-card">
+        <div class="brand-card-header">
+            Background Colour
+            <div class="card-sub">Changes the gradient background across the whole app including the kiosk</div>
+        </div>
+        <div class="brand-card-body">
+
+            <form method="POST" action="/admin/settings/branding/color" id="colorForm">
+                <input type="hidden" name="brand_color" id="brandColorInput"
+                    value="<%= branding.brand_color || '#0d2b4d' %>">
+
+                <div style="font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">
+                    Preset Colours
+                </div>
+
+                <div class="swatches">
+                    <%
+                    const presets = [
+                        { color: '#0d2b4d', name: 'Attenddr Navy' },
+                        { color: '#1e3a5f', name: 'Slate Blue'    },
+                        { color: '#1a1a2e', name: 'Midnight'      },
+                        { color: '#1a3a2a', name: 'Forest'        },
+                        { color: '#0d3d2b', name: 'Deep Green'    },
+                        { color: '#4a1520', name: 'Burgundy'      },
+                        { color: '#2d1b4e', name: 'Deep Purple'   },
+                        { color: '#2c2c2c', name: 'Charcoal'      },
+                        { color: '#1c3a4a', name: 'Steel'         },
+                        { color: '#1e2d40', name: 'Warm Navy'     },
+                    ];
+                    const currentColor = (branding.brand_color || '#0d2b4d').toLowerCase();
+                    %>
+                    <% presets.forEach(p => { %>
+                        <div>
+                            <div class="swatch <%= currentColor === p.color ? 'selected' : '' %>"
+                                 style="background:<%= p.color %>;"
+                                 onclick="selectSwatch('<%= p.color %>', this)"
+                                 title="<%= p.name %>">
+                                <span class="swatch-check">✓</span>
+                            </div>
+                            <div class="swatch-label"><%= p.name %></div>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <!-- ADVANCED PICKER -->
+                <div class="advanced-section">
+                    <button type="button" class="advanced-toggle" id="advancedToggle"
+                        onclick="toggleAdvanced()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                        Custom colour (enter any hex code)
+                    </button>
+
+                    <div class="advanced-content" id="advancedContent">
+                        <div class="color-input-row">
+                            <input type="color" class="color-picker-input" id="colorPicker"
+                                value="<%= branding.brand_color || '#0d2b4d' %>"
+                                oninput="onPickerChange(this.value)">
+                            <input type="text" class="hex-input" id="hexInput"
+                                value="<%= (branding.brand_color || '#0d2b4d').toUpperCase() %>"
+                                maxlength="7"
+                                placeholder="#0d2b4d"
+                                oninput="onHexChange(this.value)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LIVE PREVIEW -->
+                <div class="color-preview" style="margin-top:18px;">
+                    <div class="preview-gradient" id="previewGradient"></div>
+                    <div class="preview-label">Preview — this is how your gradient will look</div>
+                </div>
+
+                <div>
+                    <button type="submit" class="btn-save">Save Colour</button>
+                    <button type="button" class="btn-reset"
+                        onclick="if(confirm('Reset to Attenddr defaults?')) document.getElementById('resetForm').submit();">
+                        Reset to Default
+                    </button>
+                </div>
+
+            </form>
+
+            <form id="resetForm" method="POST" action="/admin/settings/branding/reset" style="display:none;"></form>
+
+        </div>
+    </div>
+
+    <!-- RIGHT: LOGO -->
+    <div class="brand-card">
+        <div class="brand-card-header">
+            Logo
+            <div class="card-sub">Replaces the Attenddr logo in the header across all pages</div>
+        </div>
+        <div class="brand-card-body">
+
+            <div class="logo-preview-wrap" id="logoPreviewWrap" style="background:<%= branding.brand_color || '#0d2b4d' %>;">
+                <% if (branding.logo_path) { %>
+                    <img src="<%= branding.logo_path %>" alt="Current logo" class="logo-preview-img" id="logoPreviewImg">
+                <% } else { %>
+                    <img src="/img/attendr.png" alt="Attenddr logo" class="logo-preview-img" id="logoPreviewImg">
+                <% } %>
+                <div class="logo-preview-label">
+                    Current logo — shown in the top-left of every page
+                </div>
+            </div>
+
+            <!-- ✅ FIXED: removed onclick from upload area div to prevent double file picker -->
+            <form method="POST" action="/admin/settings/branding/logo"
+                  enctype="multipart/form-data" id="logoForm">
+
+                <label for="logoFileInput" class="logo-upload-area">
+                    <input type="file" name="logo" id="logoFileInput"
+                        accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                        style="display:none;"
+                        onchange="onLogoSelected(this)">
+                    <div class="logo-upload-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div class="logo-upload-text">Click to choose a logo file</div>
+                    <div class="logo-upload-hint">PNG, JPG, SVG or WebP — max 2MB</div>
+                    <div class="logo-selected-name" id="logoSelectedName"></div>
+                </label>
+
+                <button type="submit" class="btn-save" style="margin-top:14px;">
+                    Upload Logo
+                </button>
+
+            </form>
+
+            <% if (branding.logo_path) { %>
+            <form method="POST" action="/admin/settings/branding/logo/remove" style="margin-top:12px;">
+                <button type="submit" class="btn-danger"
+                    onclick="return confirm('Remove custom logo and restore Attenddr default?')">
+                    Remove Custom Logo
+                </button>
+            </form>
+            <% } %>
+
+            <div style="margin-top:16px;font-size:12px;color:#888;line-height:1.6;">
+                For best results use a PNG or SVG with a transparent background.
+                Any shape works — the logo is scaled to fit the header (up to 60px
+                tall and 200px wide), so tall and wide logos both display correctly.
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+let currentColor = '<%= (branding.brand_color || "#0d2b4d").toLowerCase() %>';
+
+function computeLightColor(hex) {
+    try {
+        if (hex.toLowerCase() === '#0d2b4d') return '#6ea0c8';
+        const clean = hex.replace('#', '');
+        const r = parseInt(clean.substring(0, 2), 16);
+        const g = parseInt(clean.substring(2, 4), 16);
+        const b = parseInt(clean.substring(4, 6), 16);
+        const lr = Math.round(r + (255 - r) * 0.45);
+        const lg = Math.round(g + (255 - g) * 0.45);
+        const lb = Math.round(b + (255 - b) * 0.45);
+        return '#' +
+            lr.toString(16).padStart(2, '0') +
+            lg.toString(16).padStart(2, '0') +
+            lb.toString(16).padStart(2, '0');
+    } catch { return '#6ea0c8'; }
+}
+
+function updatePreview(hex) {
+    const light = computeLightColor(hex);
+    document.getElementById('previewGradient').style.background =
+        `linear-gradient(to bottom right, ${light}, ${hex})`;
+}
+
+function selectSwatch(hex, el) {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+    el.classList.add('selected');
+    currentColor = hex;
+    document.getElementById('brandColorInput').value = hex;
+    document.getElementById('colorPicker').value    = hex;
+    document.getElementById('hexInput').value       = hex.toUpperCase();
+    updatePreview(hex);
+}
+
+function onPickerChange(hex) {
+    currentColor = hex;
+    document.getElementById('brandColorInput').value = hex;
+    document.getElementById('hexInput').value        = hex.toUpperCase();
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+    updatePreview(hex);
+}
+
+function onHexChange(val) {
+    const hex = val.startsWith('#') ? val : '#' + val;
+    if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+        currentColor = hex;
+        document.getElementById('brandColorInput').value = hex;
+        document.getElementById('colorPicker').value    = hex;
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+        updatePreview(hex);
+    }
+}
+
+function toggleAdvanced() {
+    document.getElementById('advancedToggle').classList.toggle('open');
+    document.getElementById('advancedContent').classList.toggle('visible');
+}
+
+updatePreview(currentColor);
+
+function onLogoSelected(input) {
+    if (!input.files || !input.files[0]) return;
+    document.getElementById('logoSelectedName').textContent = input.files[0].name;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('logoPreviewImg').src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+</script>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,227 @@
+
+// utils/adSync.js
+// Orchestrates the full Active Directory sync across both
+// Azure AD and on-prem LDAP.
+//
+// Sync modes:
+//   LDAP 'ou'     — search a specific OU (or full directory)
+//   LDAP 'groups' — search by AD group membership (safer for large directories)
+//   Azure         — always uses Microsoft Graph API regardless of mode
+ 
+const User = require("../models/userModel");
+const Settings = require("../models/settingsModel");
+const { syncUsersFromAzure } = require("./azureAuth");
+const { syncUsersFromLdap, syncUsersByGroups } = require("./ldapAuth");
+const License = require("../models/licenseModel");
+ 
+// ------------------------------------------------------
+// MAIN SYNC FUNCTION
+// Called by the admin controller when sync is triggered.
+// Returns a summary object.
+// ------------------------------------------------------
+async function runSync() {
+ 
+    const summary = {
+        azure_fetched:  0,
+        ldap_fetched:   0,
+        total_ad_users: 0,
+        imported:       0,
+        skipped:        0,
+        flagged:        0,
+        limit_skipped:  0,
+        limit_reason:   null,
+        errors:         []
+    };
+ 
+    try {
+ 
+        // --------------------------------------------------
+        // STEP 1: Fetch from Azure AD if enabled
+        // --------------------------------------------------
+        let azureUsers = [];
+        const azureEnabled = Settings.get("ad_azure_enabled");
+ 
+        if (azureEnabled === "1") {
+            const azureResult = await syncUsersFromAzure();
+ 
+            if (azureResult.ok) {
+                azureUsers = azureResult.users;
+                summary.azure_fetched = azureUsers.length;
+            } else {
+                summary.errors.push(`Azure: ${azureResult.error}`);
+            }
+        }
+ 
+        // --------------------------------------------------
+        // STEP 2: Fetch from LDAP if enabled
+        // Route to OU sync or group sync based on mode
+        // --------------------------------------------------
+        let ldapUsers = [];
+        const ldapEnabled = Settings.get("ad_ldap_enabled");
+ 
+        if (ldapEnabled === "1") {
+            const syncMode   = Settings.get("ad_ldap_sync_mode")   || "ou";
+            const syncGroups = Settings.get("ad_ldap_sync_groups")  || "";
+ 
+            let ldapResult;
+ 
+            if (syncMode === "groups" && syncGroups.trim()) {
+                // Group-based sync — split comma-separated group names
+                const groupNames = syncGroups
+                    .split(",")
+                    .map(g => g.trim())
+                    .filter(Boolean);
+ 
+                ldapResult = await syncUsersByGroups(groupNames);
+            } else {
+                // OU-based sync (default)
+                ldapResult = await syncUsersFromLdap();
+            }
+ 
+            if (ldapResult.ok) {
+                ldapUsers = ldapResult.users;
+                summary.ldap_fetched = ldapUsers.length;
+            } else {
+                summary.errors.push(`LDAP: ${ldapResult.error}`);
+            }
+        }
+ 
+        // Stop if nothing was fetched from either source
+        if (azureUsers.length === 0 && ldapUsers.length === 0) {
+            const result = {
+                ok: false,
+                error: summary.errors.length > 0
+                    ? summary.errors.join(" | ")
+                    : "No AD sources are enabled or no users were returned.",
+                summary
+            };
+            saveSyncResult(result);
+            return result;
+        }
+ 
+        // --------------------------------------------------
+        // STEP 3: Merge and deduplicate by email
+        // Azure takes priority over LDAP for same user
+        // --------------------------------------------------
+        const adUserMap = new Map();
+ 
+        for (const u of ldapUsers) {
+            adUserMap.set(u.email.toLowerCase(), { ...u, authSource: "ldap" });
+        }
+ 
+        for (const u of azureUsers) {
+            adUserMap.set(u.email.toLowerCase(), { ...u, authSource: "azure" });
+        }
+ 
+        summary.total_ad_users = adUserMap.size;
+ 
+        // --------------------------------------------------
+        // STEP 4: Import new users
+        // --------------------------------------------------
+        const defaultRole = Settings.get("ad_default_role") || "user";
+ 
+        for (const [email, adUser] of adUserMap) {
+            try {
+                const existing = User.getByEmail(email);
+ 
+                if (existing) {
+                    summary.skipped++;
+                    continue;
+                }
+ 
+                const seat = License.canAddUser();
+                if (!seat.allowed) {
+                    summary.limit_skipped++;
+                    if (!summary.limit_reason) summary.limit_reason = seat.reason || "User limit reached";
+                    continue;
+                }
+
+                User.createFromAD({
+                    name:       adUser.name,
+                    email:      adUser.email,
+                    role:       defaultRole,
+                    authSource: adUser.authSource,
+                    jobTitle:   adUser.jobTitle   || "",
+                    department: adUser.department || "",
+                    manager:    adUser.manager    || ""
+                });
+ 
+                summary.imported++;
+ 
+            } catch (err) {
+                summary.errors.push(`Import ${email}: ${err.message}`);
+            }
+        }
+ 
+        // --------------------------------------------------
+        // STEP 5: Flag Attenddr AD users not found in AD
+        // Only checks users with auth_source azure or ldap
+        // --------------------------------------------------
+        const allAttenddrUsers = User.getAll();
+ 
+        for (const attenddrUser of allAttenddrUsers) {
+            const source = attenddrUser.auth_source;
+            if (source !== "azure" && source !== "ldap") continue;
+ 
+            const foundInAd = adUserMap.has(attenddrUser.email.toLowerCase());
+ 
+            if (!foundInAd) {
+                User.flagForReview(
+                    attenddrUser.id,
+                    `Not found in Active Directory during sync on ${new Date().toLocaleDateString("en-AU")}`
+                );
+                summary.flagged++;
+            }
+        }
+ 
+        // --------------------------------------------------
+        // STEP 6: Save sync result
+        // --------------------------------------------------
+        const result = { ok: true, summary };
+        saveSyncResult(result);
+        return result;
+ 
+    } catch (err) {
+        const result = { ok: false, error: err.message, summary };
+        saveSyncResult(result);
+        return result;
+    }
+}
+ 
+// ------------------------------------------------------
+// Save sync timestamp and result to settings
+// ------------------------------------------------------
+function saveSyncResult(result) {
+    try {
+        const now = new Date().toLocaleString("en-AU", {
+            day:    "2-digit",
+            month:  "2-digit",
+            year:   "numeric",
+            hour:   "2-digit",
+            minute: "2-digit"
+        });
+ 
+        const s = result.summary;
+        let resultText = result.ok
+            ? `${s.imported} imported, ${s.skipped} skipped, ${s.flagged} flagged`
+            : `Failed: ${result.error}`;
+ 
+        if (result.ok && s.limit_skipped > 0) {
+            resultText += `, ${s.limit_skipped} not imported (seat limit${s.limit_reason ? ': ' + s.limit_reason : ''})`;
+        }
+
+        if (result.ok && s.errors && s.errors.length > 0) {
+            resultText += ` (${s.errors.length} error(s))`;
+        }
+ 
+        Settings.setMultiple({
+            "ad_last_sync_at":     now,
+            "ad_last_sync_result": resultText
+        });
+ 
+    } catch {
+        // Non-critical
+    }
+}
+ 
+module.exports = { runSync };

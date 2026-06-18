@@ -1,0 +1,1182 @@
+<%- include("../partials/header", {
+    pageTitle: "Attenddr – Integrations",
+    activeTab: "integrations",
+    query: query,
+    pageStyles: `
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #dde3ed;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 14px 22px;
+            background: #f4f7fb;
+            border-bottom: 1px solid #dde3ed;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: 0.1px;
+        }
+
+        .card-body { padding: 22px; }
+
+        /* STATUS BADGE */
+        .status-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .status-enabled  { background: #d4edda; color: #155724; }
+        .status-disabled { background: #f0f0f0; color: #666; }
+
+        /* TOGGLE ROW */
+        .toggle-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .toggle-row input[type="checkbox"] {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .toggle-text .toggle-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 3px;
+        }
+
+        .toggle-text .toggle-desc {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* FIELD GRID */
+        .field-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .field-full { grid-column: 1 / -1; }
+
+        .field-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .field-group input,
+        .field-group select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fff;
+            color: #222;
+        }
+
+        .field-group input[type="password"],
+        .field-group input.monospace {
+            font-family: monospace;
+        }
+
+        .field-group input:focus,
+        .field-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(13,43,77,0.1);
+        }
+
+        .field-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* SYNC MODE TOGGLE */
+        .sync-mode-tabs {
+            display: flex;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .sync-mode-tab {
+            flex: 1;
+            padding: 9px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f8f8f8;
+            color: #555;
+            border: none;
+            transition: 0.15s;
+        }
+
+        .sync-mode-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .sync-mode-tab:first-child { border-right: 1px solid #ccc; }
+
+        /* GROUP SELECTOR */
+        .group-selector {
+            border: 1px solid #dde3ed;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .group-selector-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 12px;
+            background: #f8f9fc;
+            border-bottom: 1px solid #dde3ed;
+        }
+
+        .group-search-input {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .group-search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .btn-browse {
+            padding: 7px 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-browse:hover { opacity: 0.88; }
+        .btn-browse:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .group-list {
+            max-height: 220px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .group-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .group-list-item:hover { background: #f5f7fb; }
+        .group-list-item:last-child { border-bottom: none; }
+
+        .group-list-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .group-list-item .group-name { font-weight: 600; color: #222; flex: 1; }
+        .group-list-item .group-count { font-size: 11px; color: #888; white-space: nowrap; }
+
+        .group-list-empty {
+            padding: 20px;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .selected-groups-display {
+            padding: 8px 12px;
+            background: #f8f9fc;
+            border-top: 1px solid #dde3ed;
+            font-size: 12px;
+            color: #555;
+            min-height: 34px;
+        }
+
+        .selected-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            padding: 2px 8px;
+            margin: 2px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .selected-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        /* PREVIEW PANEL */
+        .preview-panel {
+            display: none;
+            border: 1px solid #dde3ed;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 14px;
+        }
+
+        .preview-panel.visible { display: block; }
+
+        .preview-panel.warning {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220,53,69,0.12);
+        }
+
+        .preview-header {
+            padding: 10px 14px;
+            background: #f4f7fb;
+            border-bottom: 1px solid #dde3ed;
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .preview-panel.warning .preview-header {
+            background: #f8d7da;
+            border-bottom-color: #f1aeb5;
+            color: #721c24;
+        }
+
+        .preview-body { padding: 12px 14px; }
+
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #444;
+        }
+
+        .preview-row:last-child { border-bottom: none; }
+        .preview-row .group-not-found { color: #dc3545; font-size: 12px; }
+
+        .preview-total {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: #f0f4ff;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .preview-total.warning {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .preview-warning {
+            margin-top: 10px;
+            padding: 10px 12px;
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+            border-radius: 6px;
+            color: #664d03;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* BUTTONS */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-save {
+            padding: 9px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save:hover { opacity: 0.88; }
+
+        .btn-test {
+            padding: 9px 16px;
+            background: white;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-test:hover { background: #f0f0f0; }
+
+        .btn-sync {
+            padding: 9px 20px;
+            background: #1a5c2e;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-sync:hover { opacity: 0.88; }
+
+        .btn-preview {
+            padding: 9px 16px;
+            background: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-preview:hover { background: #f0f4ff; }
+
+        .btn-danger {
+            padding: 7px 14px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-dismiss {
+            padding: 7px 14px;
+            background: white;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* TEST RESULT */
+        .test-result {
+            display: none;
+            padding: 7px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .test-result.ok    { background: #d4edda; color: #155724; display: inline-block; }
+        .test-result.error { background: #f8d7da; color: #721c24; display: inline-block; }
+
+        /* ALERTS */
+        .alert {
+            padding: 10px 16px;
+            border-radius: 7px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger  { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        /* SYNC META */
+        .sync-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #f8f9fc;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+
+        /* FLAGGED TABLE */
+        .flagged-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .flagged-table th,
+        .flagged-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        .flagged-table th {
+            background: #f4f7fb;
+            font-weight: 600;
+            color: #444;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+
+        .action-cell { display: flex; gap: 8px; }
+
+        .no-flagged {
+            color: #555;
+            font-size: 13px;
+            padding: 4px 0;
+        }
+
+        .source-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .source-azure { background: #cce5ff; color: #004085; }
+        .source-ldap  { background: #fff3cd; color: #856404; }
+        .source-local { background: #e2e3e5; color: #383d41; }
+
+        .flag-count {
+            background: #dc3545;
+            color: white;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 11px;
+            margin-left: 8px;
+            font-weight: 700;
+        }
+
+        /* DIVIDER */
+        .section-divider {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 20px 0;
+        }
+    `
+}) %>
+
+<div class="section-title">Integrations</div>
+<div class="section-subtitle">
+    Configure Active Directory authentication and user sync.
+    Changes take effect immediately after saving.
+</div>
+
+<!-- ALERTS -->
+<% if (query.azure_saved)   { %><div class="alert alert-success">Azure AD settings saved.</div><% } %>
+<% if (query.ldap_saved)    { %><div class="alert alert-success">LDAP settings saved.</div><% } %>
+<% if (query.sync_done)     { %><div class="alert alert-success"><%= query.msg %></div><% } %>
+<% if (query.sync_error)    { %><div class="alert alert-danger"><%= query.msg %></div><% } %>
+<% if (query.flag_resolved) { %><div class="alert alert-success">User flag resolved.</div><% } %>
+
+<!-- ================================================ -->
+<!-- AZURE AD                                         -->
+<!-- ================================================ -->
+<div class="card">
+    <div class="card-header">
+        <h3>Azure AD / Microsoft Entra ID</h3>
+        <span class="status-badge <%= settings.ad_azure_enabled === '1' ? 'status-enabled' : 'status-disabled' %>">
+            <%= settings.ad_azure_enabled === '1' ? 'Enabled' : 'Disabled' %>
+        </span>
+    </div>
+
+    <div class="card-body">
+        <form method="POST" action="/admin/integrations/azure/save">
+
+            <div class="toggle-row">
+                <input type="checkbox" id="azure_enabled" name="ad_azure_enabled"
+                    <%= settings.ad_azure_enabled === '1' ? 'checked' : '' %>>
+                <div class="toggle-text">
+                    <div class="toggle-title">Enable Azure AD login</div>
+                    <div class="toggle-desc">
+                        Displays a "Sign in with Microsoft" button on the login page.
+                        Requires an App Registration in the Azure portal.
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-grid">
+                <div class="field-group">
+                    <label>Tenant ID</label>
+                    <input type="text" name="ad_azure_tenant_id" class="monospace"
+                        value="<%= settings.ad_azure_tenant_id || '' %>"
+                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        autocomplete="off">
+                    <div class="field-hint">Found in Azure portal under App Registration &rarr; Overview</div>
+                </div>
+
+                <div class="field-group">
+                    <label>Client ID</label>
+                    <input type="text" name="ad_azure_client_id" class="monospace"
+                        value="<%= settings.ad_azure_client_id || '' %>"
+                        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                        autocomplete="off">
+                    <div class="field-hint">Also referred to as the Application ID</div>
+                </div>
+
+                <div class="field-group">
+                    <label>Client Secret</label>
+                    <input type="password" name="ad_azure_client_secret"
+                        value="<%= settings.ad_azure_client_secret || '' %>"
+                        placeholder="Client secret value"
+                        autocomplete="off">
+                    <div class="field-hint">Create under Certificates &amp; Secrets in Azure portal</div>
+                </div>
+
+                <div class="field-group">
+                    <label>Redirect URI</label>
+                    <input type="text" name="ad_azure_redirect_uri" class="monospace"
+                        value="<%= settings.ad_azure_redirect_uri || '' %>"
+                        placeholder="http://your-server/auth/azure/callback"
+                        autocomplete="off">
+                    <div class="field-hint">Must match exactly what is registered in Azure portal</div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-save">Save Azure Settings</button>
+                <button type="button" class="btn-test" onclick="testConnection('azure')">Test Connection</button>
+                <span id="azure-test-result" class="test-result"></span>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ================================================ -->
+<!-- LDAP                                             -->
+<!-- ================================================ -->
+<div class="card">
+    <div class="card-header">
+        <h3>On-Premise LDAP / Active Directory</h3>
+        <span class="status-badge <%= settings.ad_ldap_enabled === '1' ? 'status-enabled' : 'status-disabled' %>">
+            <%= settings.ad_ldap_enabled === '1' ? 'Enabled' : 'Disabled' %>
+        </span>
+    </div>
+
+    <div class="card-body">
+        <form method="POST" action="/admin/integrations/ldap/save" id="ldapForm">
+
+            <div class="toggle-row">
+                <input type="checkbox" id="ldap_enabled" name="ad_ldap_enabled"
+                    <%= settings.ad_ldap_enabled === '1' ? 'checked' : '' %>>
+                <div class="toggle-text">
+                    <div class="toggle-title">Enable LDAP authentication</div>
+                    <div class="toggle-desc">
+                        Allows users to sign in with their Active Directory credentials.
+                        Attenddr must be able to reach the LDAP server on your network.
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-grid">
+
+                <div class="field-group">
+                    <label>LDAP Server URL</label>
+                    <input type="text" name="ad_ldap_url" class="monospace"
+                        value="<%= settings.ad_ldap_url || '' %>"
+                        placeholder="ldap://192.168.1.10"
+                        autocomplete="off">
+                    <div class="field-hint">Use ldaps:// for secure LDAP (port 636)</div>
+                </div>
+
+                <div class="field-group">
+                    <label>Port</label>
+                    <input type="text" name="ad_ldap_port" class="monospace"
+                        value="<%= settings.ad_ldap_port || '389' %>"
+                        placeholder="389">
+                    <div class="field-hint">389 for standard LDAP, 636 for LDAPS</div>
+                </div>
+
+                <div class="field-group field-full">
+                    <label>Base DN</label>
+                    <input type="text" name="ad_ldap_base_dn" class="monospace"
+                        value="<%= settings.ad_ldap_base_dn || '' %>"
+                        placeholder="DC=company,DC=local"
+                        autocomplete="off">
+                    <div class="field-hint">The root of your Active Directory tree</div>
+                </div>
+
+                <div class="field-group field-full">
+                    <label>Service Account DN</label>
+                    <input type="text" name="ad_ldap_service_dn" class="monospace"
+                        value="<%= settings.ad_ldap_service_dn || '' %>"
+                        placeholder="CN=attenddr-service,OU=ServiceAccounts,DC=company,DC=local"
+                        autocomplete="off">
+                    <div class="field-hint">
+                        Full DN of the read-only service account Attenddr uses to search the directory
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label>Service Account Password</label>
+                    <input type="password" name="ad_ldap_service_password"
+                        value="<%= settings.ad_ldap_service_password || '' %>"
+                        autocomplete="off">
+                </div>
+
+                <div class="field-group">
+                    <label>User Login Attribute</label>
+                    <select name="ad_ldap_user_attribute">
+                        <option value="userPrincipalName"
+                            <%= (settings.ad_ldap_user_attribute || 'userPrincipalName') === 'userPrincipalName' ? 'selected' : '' %>>
+                            userPrincipalName (email format — recommended)
+                        </option>
+                        <option value="sAMAccountName"
+                            <%= settings.ad_ldap_user_attribute === 'sAMAccountName' ? 'selected' : '' %>>
+                            sAMAccountName (username format)
+                        </option>
+                        <option value="mail"
+                            <%= settings.ad_ldap_user_attribute === 'mail' ? 'selected' : '' %>>
+                            mail (email address field)
+                        </option>
+                    </select>
+                    <div class="field-hint">Attribute used to match users by email at login</div>
+                </div>
+
+                <div class="field-group">
+                    <label>Default Role for Imported Users</label>
+                    <select name="ad_default_role">
+                        <option value="user"  <%= (settings.ad_default_role || 'user') === 'user'  ? 'selected' : '' %>>User</option>
+                        <option value="admin" <%= settings.ad_default_role === 'admin' ? 'selected' : '' %>>Admin</option>
+                    </select>
+                    <div class="field-hint">Role assigned to users auto-created from AD</div>
+                </div>
+
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- SYNC CONFIGURATION -->
+            <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:12px;">
+                Sync Configuration
+            </div>
+
+            <!-- SYNC MODE SELECTOR -->
+            <div style="margin-bottom:16px;">
+                <div style="font-size:12px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;">
+                    Sync Method
+                </div>
+                <div class="sync-mode-tabs">
+                    <button type="button" class="sync-mode-tab <%= (settings.ad_ldap_sync_mode || 'ou') === 'ou' ? 'active' : '' %>"
+                        id="modeTabOu" onclick="setSyncMode('ou')">
+                        Organisational Unit (OU)
+                    </button>
+                    <button type="button" class="sync-mode-tab <%= settings.ad_ldap_sync_mode === 'groups' ? 'active' : '' %>"
+                        id="modeTabGroups" onclick="setSyncMode('groups')">
+                        Active Directory Groups
+                    </button>
+                </div>
+                <input type="hidden" name="ad_ldap_sync_mode" id="syncModeInput"
+                    value="<%= settings.ad_ldap_sync_mode || 'ou' %>">
+            </div>
+
+            <!-- OU PANEL -->
+            <div id="ouPanel" style="display:<%= (settings.ad_ldap_sync_mode || 'ou') === 'ou' ? 'block' : 'none' %>">
+                <div class="field-group">
+                    <label>Sync OU <span style="font-weight:400;color:#888;text-transform:none;">(optional)</span></label>
+                    <input type="text" name="ad_ldap_sync_ou" class="monospace"
+                        value="<%= settings.ad_ldap_sync_ou || '' %>"
+                        placeholder="OU=Staff,DC=company,DC=local"
+                        autocomplete="off">
+                    <div class="field-hint">
+                        Restrict sync to a specific Organisational Unit.
+                        Leave blank to search the entire directory.
+                        Not recommended for large directories with more than a few thousand users.
+                    </div>
+                </div>
+            </div>
+
+            <!-- GROUPS PANEL -->
+            <div id="groupsPanel" style="display:<%= settings.ad_ldap_sync_mode === 'groups' ? 'block' : 'none' %>">
+                <div style="font-size:12px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;">
+                    Select Groups to Sync
+                </div>
+
+                <div class="field-hint" style="margin-bottom:10px;">
+                    Only users who are members of the selected groups will be imported.
+                    Users in multiple groups are imported once.
+                    Browse requires a working LDAP connection.
+                </div>
+
+                <!-- GROUP SELECTOR WIDGET -->
+                <div class="group-selector">
+                    <div class="group-selector-toolbar">
+                        <input type="text" class="group-search-input" id="groupSearchInput"
+                            placeholder="Search for a group by name..."
+                            oninput="debounceGroupSearch(this.value)">
+                        <button type="button" class="btn-browse" id="browseBtn"
+                            onclick="browseGroups()">Browse Groups</button>
+                    </div>
+
+                    <div class="group-list" id="groupList">
+                        <div class="group-list-empty">
+                            Click "Browse Groups" to load available groups from Active Directory,
+                            or type group names directly below.
+                        </div>
+                    </div>
+
+                    <div class="selected-groups-display" id="selectedGroupsDisplay">
+                        <span style="color:#aaa;">No groups selected</span>
+                    </div>
+                </div>
+
+                <!-- MANUAL ENTRY FALLBACK -->
+                <div style="margin-top:12px;">
+                    <div style="font-size:12px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:6px;">
+                        Or enter group names manually
+                    </div>
+                    <input type="text" name="ad_ldap_sync_groups" id="syncGroupsInput"
+                        class="monospace" style="width:100%;box-sizing:border-box;padding:9px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;"
+                        value="<%= settings.ad_ldap_sync_groups || '' %>"
+                        placeholder="IT Staff, Finance Team, HR Department"
+                        autocomplete="off"
+                        oninput="syncGroupsFromInput()">
+                    <div class="field-hint">Comma-separated list of AD group names (CN values)</div>
+                </div>
+
+                <!-- PREVIEW PANEL -->
+                <div id="previewPanel" class="preview-panel">
+                    <div class="preview-header">Sync Preview</div>
+                    <div class="preview-body" id="previewBody"></div>
+                </div>
+
+                <div class="btn-row" style="margin-top:12px;">
+                    <button type="button" class="btn-preview" onclick="runPreview()">
+                        Preview Sync
+                    </button>
+                    <span id="preview-status" style="font-size:12px;color:#888;"></span>
+                </div>
+
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-save">Save LDAP Settings</button>
+                <button type="button" class="btn-test" onclick="testConnection('ldap')">Test Connection</button>
+                <span id="ldap-test-result" class="test-result"></span>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ================================================ -->
+<!-- SYNC                                             -->
+<!-- ================================================ -->
+<div class="card">
+    <div class="card-header">
+        <h3>User Sync</h3>
+    </div>
+
+    <div class="card-body">
+        <p style="font-size:13px;color:#555;margin-top:0;margin-bottom:16px;">
+            Sync imports users from your configured Active Directory sources.
+            Existing Attenddr users are never overwritten.
+            Users found in Attenddr but missing from AD are flagged for review below.
+        </p>
+
+        <form method="POST" action="/admin/integrations/sync">
+            <button type="submit" class="btn-sync">Run Sync</button>
+        </form>
+
+        <% if (settings.ad_last_sync_at) { %>
+            <div class="sync-meta">
+                Last sync: <strong><%= settings.ad_last_sync_at %></strong>
+                &mdash; <%= settings.ad_last_sync_result || '' %>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<!-- ================================================ -->
+<!-- FLAGGED USERS                                    -->
+<!-- ================================================ -->
+<div class="card">
+    <div class="card-header">
+        <h3>
+            Flagged Users
+            <% if (flagged && flagged.length > 0) { %>
+                <span class="flag-count"><%= flagged.length %></span>
+            <% } %>
+        </h3>
+    </div>
+
+    <div class="card-body">
+        <p style="font-size:13px;color:#555;margin-top:0;margin-bottom:16px;">
+            These Attenddr users have an Active Directory auth source but were not found
+            during the last sync. They may have left the organisation or been removed from AD.
+        </p>
+
+        <% if (!flagged || flagged.length === 0) { %>
+            <div class="no-flagged">All Active Directory users were found in the last sync.</div>
+        <% } else { %>
+            <table class="flagged-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Source</th>
+                        <th>Flagged</th>
+                        <th>Reason</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% flagged.forEach(f => { %>
+                        <tr>
+                            <td><%= f.name %></td>
+                            <td><%= f.email %></td>
+                            <td>
+                                <span class="source-badge source-<%= f.auth_source %>">
+                                    <%= f.auth_source %>
+                                </span>
+                            </td>
+                            <td><%= new Date(f.flagged_at).toLocaleDateString('en-AU') %></td>
+                            <td><%= f.reason %></td>
+                            <td>
+                                <div class="action-cell">
+                                    <form method="POST" action="/admin/integrations/flag/resolve/<%= f.flag_id %>">
+                                        <button type="submit" class="btn-dismiss">Keep</button>
+                                    </form>
+                                    <form method="POST" action="/admin/integrations/flag/deactivate">
+                                        <input type="hidden" name="userId" value="<%= f.user_id %>">
+                                        <input type="hidden" name="flagId" value="<%= f.flag_id %>">
+                                        <button type="submit" class="btn-danger"
+                                            onclick="return confirm('Deactivate <%= f.name %>? They will no longer be able to sign in.')">
+                                            Deactivate
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+</div>
+
+<script>
+// ================================================
+// SYNC MODE TOGGLE
+// ================================================
+function setSyncMode(mode) {
+    document.getElementById("syncModeInput").value = mode;
+
+    document.getElementById("modeTabOu").classList.toggle("active", mode === "ou");
+    document.getElementById("modeTabGroups").classList.toggle("active", mode === "groups");
+
+    document.getElementById("ouPanel").style.display     = mode === "ou"     ? "block" : "none";
+    document.getElementById("groupsPanel").style.display = mode === "groups" ? "block" : "none";
+}
+
+// ================================================
+// SELECTED GROUPS STATE
+// ================================================
+let selectedGroups = new Set(
+    "<%= (settings.ad_ldap_sync_groups || '').replace(/"/g, '') %>"
+        .split(",")
+        .map(g => g.trim())
+        .filter(Boolean)
+);
+
+const LDAP_PREVIEW_GUIDANCE_LIMIT = 300;
+const LDAP_LICENSE_USER_LIMIT = Number("<%= (typeof license !== 'undefined' && license && license.max_users) ? license.max_users : 0 %>") || 0;
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function renderSelectedGroups() {
+    const display = document.getElementById("selectedGroupsDisplay");
+    const input   = document.getElementById("syncGroupsInput");
+
+    if (selectedGroups.size === 0) {
+        display.innerHTML = '<span style="color:#aaa;">No groups selected</span>';
+    } else {
+        display.innerHTML = Array.from(selectedGroups).map(g => `
+            <span class="selected-tag">
+                ${g}
+                <button type="button" onclick="removeGroup('${g.replace(/'/g, "\\'")}')">x</button>
+            </span>
+        `).join("");
+    }
+
+    input.value = Array.from(selectedGroups).join(", ");
+}
+
+function removeGroup(name) {
+    selectedGroups.delete(name);
+    renderSelectedGroups();
+    renderGroupList(lastGroupResults);
+}
+
+function addGroup(name) {
+    if (name) selectedGroups.add(name.trim());
+    renderSelectedGroups();
+    renderGroupList(lastGroupResults);
+}
+
+function syncGroupsFromInput() {
+    const val = document.getElementById("syncGroupsInput").value;
+    selectedGroups = new Set(
+        val.split(",").map(g => g.trim()).filter(Boolean)
+    );
+    renderSelectedGroups();
+    renderGroupList(lastGroupResults);
+}
+
+renderSelectedGroups();
+
+// ================================================
+// GROUP BROWSER
+// ================================================
+let lastGroupResults = [];
+let browseTimer = null;
+
+function debounceGroupSearch(term) {
+    clearTimeout(browseTimer);
+    browseTimer = setTimeout(() => browseGroups(term), 400);
+}
+
+async function browseGroups(searchTerm) {
+    const btn = document.getElementById("browseBtn");
+    btn.disabled = true;
+    btn.textContent = "Loading...";
+
+    const list = document.getElementById("groupList");
+    list.innerHTML = '<div class="group-list-empty">Searching Active Directory...</div>';
+
+    try {
+        const term = searchTerm || document.getElementById("groupSearchInput").value || "";
+        const res  = await fetch(`/admin/integrations/ldap/groups?search=${encodeURIComponent(term)}`);
+        const data = await res.json();
+
+        if (!data.ok) {
+            list.innerHTML = `<div class="group-list-empty" style="color:#dc3545;">
+                Error: ${data.error}
+            </div>`;
+            return;
+        }
+
+        lastGroupResults = data.groups || [];
+        renderGroupList(lastGroupResults);
+
+    } catch (err) {
+        list.innerHTML = `<div class="group-list-empty" style="color:#dc3545;">
+            Request failed — check LDAP connection
+        </div>`;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Browse Groups";
+    }
+}
+
+function renderGroupList(groups) {
+    const list = document.getElementById("groupList");
+
+    if (!groups || groups.length === 0) {
+        list.innerHTML = '<div class="group-list-empty">No groups found.</div>';
+        return;
+    }
+
+    list.innerHTML = groups.map(g => {
+        const checked = selectedGroups.has(g.name) ? "checked" : "";
+        const count   = g.memberCount > 0 ? `${g.memberCount} member${g.memberCount !== 1 ? "s" : ""}` : "0 members";
+        return `
+            <div class="group-list-item" onclick="toggleGroup('${g.name.replace(/'/g, "\\'")}')">
+                <input type="checkbox" ${checked} onclick="event.stopPropagation(); toggleGroup('${g.name.replace(/'/g, "\\'")}')">
+                <span class="group-name">${g.name}</span>
+                <span class="group-count">${count}</span>
+            </div>
+        `;
+    }).join("");
+}
+
+function toggleGroup(name) {
+    if (selectedGroups.has(name)) {
+        selectedGroups.delete(name);
+    } else {
+        selectedGroups.add(name);
+    }
+    renderSelectedGroups();
+    renderGroupList(lastGroupResults);
+}
+
+// ================================================
+// PREVIEW SYNC
+// ================================================
+async function runPreview() {
+    const groups = Array.from(selectedGroups).join(",");
+
+    if (!groups.trim()) {
+        alert("Please select or enter at least one group before previewing.");
+        return;
+    }
+
+    const statusEl = document.getElementById("preview-status");
+    const panel    = document.getElementById("previewPanel");
+    const body     = document.getElementById("previewBody");
+
+    statusEl.textContent = "Running preview...";
+    panel.classList.remove("visible", "warning");
+
+    try {
+        const res  = await fetch("/admin/integrations/ldap/preview", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ groups })
+        });
+
+        const data = await res.json();
+        statusEl.textContent = "";
+
+        if (!data.ok) {
+            body.innerHTML = `<div style="color:#dc3545;font-size:13px;">Error: ${data.error}</div>`;
+            panel.classList.add("visible");
+            return;
+        }
+
+        const rows = (data.preview || []).map(p => {
+            const groupName = escapeHtml(p.group);
+            if (!p.found) {
+                return `<div class="preview-row">
+                    <span>${groupName}</span>
+                    <span class="group-not-found">Group not found in AD</span>
+                </div>`;
+            }
+            return `<div class="preview-row">
+                <span>${groupName}</span>
+                <span>${p.memberCount} member${p.memberCount !== 1 ? "s" : ""}</span>
+            </div>`;
+        }).join("");
+
+        const totalUnique = Number(data.totalUnique || 0);
+        const overLicenseLimit = LDAP_LICENSE_USER_LIMIT > 0 && totalUnique > LDAP_LICENSE_USER_LIMIT;
+        const overGuidanceLimit = totalUnique > LDAP_PREVIEW_GUIDANCE_LIMIT;
+        const hasWarning = overLicenseLimit || overGuidanceLimit;
+
+        let warningHtml = "";
+        if (overLicenseLimit) {
+            warningHtml = `<div class="preview-warning">
+                This preview includes ${totalUnique} unique users, which is above the current licence limit of ${LDAP_LICENSE_USER_LIMIT}.
+                Choose a smaller AD group before syncing.
+            </div>`;
+        } else if (overGuidanceLimit) {
+            warningHtml = `<div class="preview-warning">
+                This preview includes ${totalUnique} unique users. On-prem tiers are intended for up to ${LDAP_PREVIEW_GUIDANCE_LIMIT} users,
+                so check the selected groups carefully before syncing.
+            </div>`;
+        }
+
+        body.innerHTML = rows + `
+            <div class="preview-total ${hasWarning ? "warning" : ""}">
+                <span>Total unique users to import</span>
+                <span>${totalUnique}</span>
+            </div>
+        ` + warningHtml;
+
+        panel.classList.add("visible");
+        panel.classList.toggle("warning", hasWarning);
+        panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    } catch (err) {
+        statusEl.textContent = "Preview failed — " + err.message;
+    }
+}
+
+// ================================================
+// TEST CONNECTION
+// ================================================
+async function testConnection(type) {
+    const resultEl = document.getElementById(`${type}-test-result`);
+    resultEl.className = "test-result";
+    resultEl.style.display = "inline-block";
+    resultEl.textContent = "Testing...";
+
+    try {
+        const res  = await fetch(`/admin/integrations/${type}/test`, {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+        const data = await res.json();
+
+        resultEl.classList.add(data.ok ? "ok" : "error");
+        resultEl.textContent = data.ok
+            ? (data.message || "Connection successful")
+            : (data.error   || "Connection failed");
+
+    } catch (err) {
+        resultEl.classList.add("error");
+        resultEl.textContent = "Request failed — " + err.message;
+    }
+}
+</script>
+
+<%- include("../partials/footer") %>

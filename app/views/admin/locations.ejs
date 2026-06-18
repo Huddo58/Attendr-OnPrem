@@ -1,0 +1,393 @@
+<%- include("../partials/header", {
+    pageTitle: "Attenddr – Locations",
+    activeTab: "locations",
+    query: query,
+    pageStyles: `
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f4f7fb;
+            color: #444;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Column widths */
+        th:nth-child(1), td:nth-child(1) { width: 25%; }
+        th:nth-child(2), td:nth-child(2) { width: 12%; }
+        th:nth-child(3), td:nth-child(3) { width: 25%; }
+        th:nth-child(4), td:nth-child(4) { width: 30%; }
+        th:nth-child(5), td:nth-child(5) { width: 8%; }
+
+        /* ACTION ICON BUTTONS */
+        .delete-btn, .edit-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: 0.2s;
+        }
+
+        .delete-btn:hover, .edit-btn:hover {
+            transform: scale(1.12);
+            opacity: 0.85;
+        }
+
+        .icon-trash, .icon-edit {
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        .icon-trash { color: #d11a2a; }
+        .icon-edit { color: var(--primary-color); }
+
+        /* CIDR INLINE EDIT */
+        .cidr-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cidr-input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: monospace;
+            min-width: 0;
+        }
+
+        .cidr-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(47,111,237,0.15);
+        }
+
+        .cidr-save-btn {
+            padding: 6px 12px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .cidr-save-btn:hover {
+            opacity: 0.88;
+        }
+
+        .field-hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 3px;
+        }
+
+        /* SUCCESS BANNER */
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 10px 16px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        /* POPUP */
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .popup-box {
+            width: 460px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        .popup-header {
+            padding: 18px 22px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .popup-content {
+            padding: 24px 26px;
+            box-sizing: border-box;
+        }
+
+        .popup-content input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 6px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        .popup-content input[name="cidr"] {
+            font-family: monospace;
+        }
+
+        .popup-content label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            margin-top: 14px;
+        }
+
+        .popup-content label:first-of-type {
+            margin-top: 0;
+        }
+
+        .popup-field-hint {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .popup-actions {
+            padding: 15px 25px;
+            background: #f5f5f5;
+            text-align: right;
+        }
+
+        .popup-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .popup-btn.cancel { background: #ddd; }
+        .popup-btn.save { background: var(--primary-color); color: white; }
+    `
+}) %>
+
+<!-- PAGE TITLE -->
+<div class="section-title">Locations</div>
+<div class="section-subtitle">
+    Manage physical work locations and configure CIDR ranges for automatic IP-based location detection.
+</div>
+
+<!-- SUCCESS BANNER -->
+<% if (query && query.cidr_saved) { %>
+    <div class="alert-success">✅ CIDR range saved successfully.</div>
+<% } %>
+
+<div class="toolbar">
+    <button class="btn-primary" onclick="openAddLocation()">+ Add Location</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Location Name</th>
+            <th>Code</th>
+            <th>Address</th>
+            <th>
+                CIDR Range
+                <span style="font-weight:400; color:#888; font-size:11px; margin-left:6px;">
+                    (auto IP detection)
+                </span>
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <% locations.forEach(loc => { %>
+            <tr>
+                <td><%= loc.name %></td>
+                <td><%= loc.code %></td>
+                <td><%= loc.address %></td>
+
+                <!-- CIDR INLINE EDIT -->
+                <td>
+                    <form class="cidr-form" method="POST" action="/admin/locations/cidr">
+                        <input type="hidden" name="id" value="<%= loc.id %>">
+                        <input
+                            class="cidr-input"
+                            type="text"
+                            name="cidr"
+                            value="<%= loc.cidr || '' %>"
+                            placeholder="e.g. 192.168.1.0/24"
+                            spellcheck="false"
+                            autocomplete="off"
+                        >
+                        <button class="cidr-save-btn" type="submit">Save</button>
+                    </form>
+                    <div class="field-hint">Separate multiple ranges with commas</div>
+                </td>
+
+                <td>
+                    <button class="edit-btn" title="Edit" onclick='openEditLocation(<%- JSON.stringify(loc) %>)'>
+                        <svg class="icon-edit" viewBox="0 0 24 24">
+                            <path d="M4 21v-4l12-12 4 4-12 12H4z"
+                                  stroke="currentColor" stroke-width="2"
+                                  stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </svg>
+                    </button>
+
+                    <form method="POST" action="/admin/locations/delete/<%= loc.id %>" style="display:inline;">
+                        <button class="delete-btn">
+                            <svg class="icon-trash" viewBox="0 0 24 24">
+                                <path d="M3 6h18M9 6V4h6v2m-7 4v10m4-10v10m4-10v10M5 6l1 14h12l1-14"
+                                      stroke="currentColor" stroke-width="2" fill="none"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        <% }) %>
+    </tbody>
+</table>
+
+<!-- ADD LOCATION POPUP -->
+<div id="addLocationPopup" class="popup-overlay">
+    <div class="popup-box">
+
+        <div class="popup-header">
+            <div>Add Location</div>
+            <button class="popup-close" onclick="closeAddLocation()">✖</button>
+        </div>
+
+        <form action="/admin/locations/create" method="POST">
+            <div class="popup-content">
+
+                <label>Location Name</label>
+                <input name="name" required placeholder="e.g. Head Office">
+
+                <label>Code</label>
+                <input name="code" required placeholder="e.g. HO">
+
+                <label>Address</label>
+                <input name="address" placeholder="e.g. 123 Main St, Brisbane">
+
+                <label>
+                    CIDR Range
+                    <span style="font-weight:400; color:#888;">(optional)</span>
+                </label>
+                <input
+                    name="cidr"
+                    placeholder="e.g. 192.168.1.0/24"
+                    spellcheck="false"
+                    autocomplete="off"
+                    style="font-family: monospace;"
+                >
+                <div class="popup-field-hint">
+                    IP subnet for this location. Users on this network will have their
+                    location automatically detected. Separate multiple ranges with commas.
+                    Leave blank if not needed.
+                </div>
+
+            </div>
+
+            <div class="popup-actions">
+                <button type="button" class="popup-btn cancel" onclick="closeAddLocation()">Cancel</button>
+                <button type="submit" class="popup-btn save">Save</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- EDIT LOCATION POPUP -->
+<div id="editLocationPopup" class="popup-overlay">
+    <div class="popup-box">
+
+        <div class="popup-header">
+            <div>Edit Location</div>
+            <button class="popup-close" onclick="closeEditLocation()">×</button>
+        </div>
+
+        <form id="editLocationForm" method="POST">
+            <div class="popup-content">
+
+                <label>Location Name</label>
+                <input name="name" id="editLocationName" required>
+
+                <label>Code</label>
+                <input name="code" id="editLocationCode" required>
+
+                <label>Address</label>
+                <input name="address" id="editLocationAddress">
+
+            </div>
+
+            <div class="popup-actions">
+                <button type="button" class="popup-btn cancel" onclick="closeEditLocation()">Cancel</button>
+                <button type="submit" class="popup-btn save">Save Changes</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+function openAddLocation() {
+    document.getElementById("addLocationPopup").style.display = "flex";
+}
+
+function closeAddLocation() {
+    document.getElementById("addLocationPopup").style.display = "none";
+}
+
+function openEditLocation(location) {
+    document.getElementById("editLocationName").value = location.name || "";
+    document.getElementById("editLocationCode").value = location.code || "";
+    document.getElementById("editLocationAddress").value = location.address || "";
+    document.getElementById("editLocationForm").action = "/admin/locations/edit/" + location.id;
+    document.getElementById("editLocationPopup").style.display = "flex";
+}
+
+function closeEditLocation() {
+    document.getElementById("editLocationPopup").style.display = "none";
+}
+</script>
+
+<%- include("../partials/footer") %>

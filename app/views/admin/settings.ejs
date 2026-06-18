@@ -1,0 +1,419 @@
+<%- include("../partials/header", {
+    pageTitle: "Attendr – Settings",
+    activeTab: "settings",
+    query: typeof query !== "undefined" ? query : {},
+    pageStyles: `
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 36px;
+            max-width: 2500px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .panel {
+            background: #f4f7fb;
+            border-radius: 10px;
+            padding: 30px 65px;
+            box-sizing: border-box;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1c2733;
+        }
+
+        .panel p {
+            font-size: 13px;
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .toggle-row input {
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            margin-top: 6px;
+        }
+
+        .reset-section {
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid #dde3ec;
+        }
+
+        .reset-meta {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 12px;
+        }
+
+        .license-key {
+            font-family: monospace;
+            background: #eef2f7;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .kv {
+            margin: 12px 0;
+        }
+
+        .kv label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: #304150;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .kv .value-box {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #dde3ec;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #1c2733;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .kv .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+        }
+
+        .copy-btn {
+            border: none;
+            background: #eef2f7;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #e3e8ef;
+        }
+
+        /* ---------------- MODAL POPUP ---------------- */
+
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 43, 77, 0.55);
+            backdrop-filter: blur(3px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .popup-box {
+            background: #ffffff;
+            border-radius: 12px;
+            width: 420px;
+            max-width: 90%;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        .popup-header {
+            background: #0d2b4d;
+            color: #ffffff;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .popup-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .popup-content {
+            padding: 20px 18px;
+            font-size: 14px;
+            color: #1c2733;
+        }
+
+        .popup-actions {
+            padding: 12px 18px 18px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .popup-btn {
+            background: #0d2b4d;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+    `
+}) %>
+
+<div class="section-title">Settings</div>
+<div class="section-subtitle">
+    System behaviour and automatic rules for this Attendr instance.
+</div>
+
+<!-- LICENSE ERROR MODAL -->
+<% if (query && query.license_error) { %>
+<div class="popup-overlay">
+    <div class="popup-box">
+        <div class="popup-header">
+            <div>License Error</div>
+            <button class="popup-close"
+                onclick="
+                    this.closest('.popup-overlay').remove();
+                    history.replaceState({}, document.title, window.location.pathname);
+                ">
+                ✖
+            </button>
+        </div>
+        <div class="popup-content">
+            <p style="margin:0 0 10px 0;">
+                <strong>License activation failed.</strong>
+            </p>
+            <p style="margin:0;">
+                <%= query.license_error %>
+            </p>
+        </div>
+        <div class="popup-actions">
+            <button class="popup-btn"
+                onclick="
+                    this.closest('.popup-overlay').remove();
+                    history.replaceState({}, document.title, window.location.pathname);
+                ">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+<% } %>
+
+<div class="settings-grid">
+
+    <!-- LICENSE -->
+    <div class="panel">
+        <div class="panel-title">License</div>
+        <p>
+            Controls usage limits and license validity for this Attendr instance.
+        </p>
+
+        <div class="kv">
+            <label>Organisation</label>
+            <div class="value-box">
+                <span><%= settings?.org_name || "—" %></span>
+            </div>
+        </div>
+
+        <div class="kv">
+            <label>Instance ID</label>
+            <div class="value-box">
+                <span id="instance-id" class="mono"><%= settings?.instance_id || "—" %></span>
+                <button class="copy-btn"
+                        type="button"
+                        onclick="copyText('instance-id', this)">
+                    Copy
+                </button>
+            </div>
+        </div>
+
+        <div class="kv">
+            <label>Licence status</label>
+            <div class="value-box">
+                <span><%= license?.valid ? "Active" : (license?.status === 'trial' ? 'Trial' : 'Expired / Invalid') %></span>
+            </div>
+        </div>
+
+        <div class="kv">
+            <label>Max users</label>
+            <div class="value-box">
+                <span><%= (license?.max_users ?? "—") %></span>
+            </div>
+        </div>
+
+        <div class="kv">
+            <label>Time remaining</label>
+            <div class="value-box">
+                <span>
+                    <%= license?.expires_in_days != null
+                        ? license.expires_in_days + " days"
+                        : "Unlimited" %>
+                </span>
+            </div>
+        </div>
+
+        <div class="kv">
+            <label>Current licence key</label>
+            <div class="value-box">
+                <span 
+                    id="masked-key" 
+                    class="mono"
+                    data-fullkey="<%= license?.full_key %>">
+                    <%= license?.masked_key || "—" %>
+                </span>
+            </div>
+        </div>
+
+        <form action="/admin/settings/license" method="POST">
+            <div class="reset-section">
+                <label style="font-size:12px;">Apply new license key</label>
+                <input
+                    type="text"
+                    name="license_key"
+                    style="width:100%; padding:8px; margin-top:6px;"
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    required
+                >
+                <button class="btn-primary" type="submit">
+                    Apply License
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- SYSTEM TIME -->
+    <div class="panel">
+        <div class="panel-title">System Time</div>
+        <p>
+            Attendr uses the local time and timezone of the server it is installed on.
+        </p>
+
+        <div class="reset-meta">
+            <strong>Current server time:</strong><br>
+            <%= new Date().toLocaleString() %>
+        </div>
+
+        <div class="reset-meta">
+            <strong>Server timezone:</strong><br>
+            <%= Intl.DateTimeFormat().resolvedOptions().timeZone %>
+        </div>
+
+        <div class="reset-meta">
+            <strong>UTC offset:</strong><br>
+            UTC<%= -new Date().getTimezoneOffset() / 60 %>
+        </div>
+
+        <div class="reset-meta">
+            To change this, update the operating system timezone on the server.
+        </div>
+    </div>
+
+    <!-- DAILY STATUS RESET -->
+    <div class="panel">
+        <div class="panel-title">Daily Status Reset</div>
+        <p>
+            Automatically reset all users to
+            <strong>Out of Office</strong> at midnight each day.
+        </p>
+
+        <form action="/admin/settings/behaviour" method="POST">
+            <div class="toggle-row">
+                <input
+                    type="checkbox"
+                    name="daily_reset_enabled"
+                    <%= settings.daily_reset_enabled === "1" ? "checked" : "" %>
+                >
+                <label>Enable daily status reset</label>
+            </div>
+
+            <button class="btn-primary" type="submit">
+                Save Daily Reset Settings
+            </button>
+        </form>
+
+        <div class="reset-section">
+            <% if (settings.last_daily_reset_at) { %>
+                <div class="reset-meta">
+                    Last automatic reset:
+                    <%= new Date(settings.last_daily_reset_at).toLocaleString() %>
+                </div>
+            <% } %>
+
+            <form
+                action="/admin/settings/reset-now"
+                method="POST"
+                onsubmit="return confirm('Are you sure you want to reset all users to Out of Office right now?');"
+            >
+                <button class="btn-primary" type="submit">
+                    Reset now
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function copyText(id, btn) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const text = (el.innerText || "").trim();
+    if (!text || text === "—") return;
+
+    function showCopied() {
+        if (!btn) return;
+        const original = btn.innerText;
+        btn.innerText = "Copied!";
+        btn.disabled = true;
+        setTimeout(() => {
+            btn.innerText = original;
+            btn.disabled = false;
+        }, 1500);
+    }
+
+    function fallbackCopy(text, cb) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (cb) cb();
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+            .then(showCopied)
+            .catch(() => fallbackCopy(text, showCopied));
+    } else {
+        fallbackCopy(text, showCopied);
+    }
+}
+</script>
+
+<%- include("../partials/footer") %>

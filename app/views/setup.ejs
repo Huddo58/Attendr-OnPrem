@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="icon" type="image/png" href="/img/attendr.png">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attenddr Setup</title>
+
+    <style>
+        <%
+            const brandColor = branding?.brand_color || '#0d2b4d';
+        %>
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", Arial, sans-serif;
+            /* ✅ Dynamic gradient from branding settings */
+            background: linear-gradient(
+                to bottom right,
+                <%= branding.brand_color_light || '#6ea0c8' %>,
+                <%= brandColor %>
+            );
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        .setup-card {
+            width: 440px;
+            max-width: 100%;
+            background: rgba(255, 255, 255, 0.10);
+            padding: 40px;
+            border-radius: 14px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.25);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+            color: #fff;
+        }
+
+        .logo img {
+            width: 85px;
+            margin-bottom: 10px;
+            user-select: none;
+        }
+
+        .subtitle {
+            font-size: 17px;
+            margin-bottom: 25px;
+            opacity: 0.85;
+        }
+
+        .form-group {
+            width: 100%;
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 6px;
+            display: block;
+            opacity: 0.9;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255,255,255,0.92);
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.25);
+        }
+
+        /* ✅ PASSWORD REQUIREMENTS LIST */
+        .password-rules {
+            margin: 8px 0 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .password-rules li {
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: color 0.2s;
+        }
+
+        .password-rules li.met { color: #6ee7b7; }
+
+        .rule-icon {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 9px;
+            transition: all 0.2s;
+        }
+
+        .met .rule-icon {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .match-indicator {
+            font-size: 12px;
+            margin-top: 6px;
+            min-height: 16px;
+            text-align: left;
+        }
+
+        .match-ok   { color: #6ee7b7; }
+        .match-fail { color: #fca5a5; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn:hover    { background: rgba(0,0,0,0.45); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 11px;
+            opacity: 0.65;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="setup-card">
+
+        <div class="logo">
+            <%
+                /* Setup runs before any branding is saved so always use
+                   the default Attenddr logo here. Custom logos are set
+                   after setup is complete via the Branding admin page. */
+            %>
+            <img src="/img/attendr.png" alt="Attenddr Logo">
+        </div>
+
+        <div class="subtitle">Create Your Attenddr Admin Account</div>
+
+        <form action="/setup" method="POST" id="setupForm">
+
+            <div class="form-group">
+                <label>Organisation Name</label>
+                <input type="text" name="orgName" required placeholder="e.g. Acme Corp">
+            </div>
+
+            <div class="form-group">
+                <label>Admin Email</label>
+                <input type="email" name="adminEmail" required placeholder="admin@yourcompany.com"
+                    autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label>Admin Password</label>
+                <input type="password" name="adminPassword" id="setupPassword" required
+                    autocomplete="new-password"
+                    oninput="checkSetupRules()">
+
+                <!-- ✅ PASSWORD RULES -->
+                <ul class="password-rules" id="setupRules">
+                    <li id="s-rule-length">
+                        <span class="rule-icon">✓</span>
+                        At least 8 characters
+                    </li>
+                    <li id="s-rule-upper">
+                        <span class="rule-icon">✓</span>
+                        At least one uppercase letter (A–Z)
+                    </li>
+                    <li id="s-rule-lower">
+                        <span class="rule-icon">✓</span>
+                        At least one lowercase letter (a–z)
+                    </li>
+                    <li id="s-rule-number">
+                        <span class="rule-icon">✓</span>
+                        At least one number (0–9)
+                    </li>
+                    <li id="s-rule-special">
+                        <span class="rule-icon">✓</span>
+                        At least one special character (!@#$%^&*)
+                    </li>
+                </ul>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" name="confirmPassword" id="setupConfirm" required
+                    autocomplete="new-password"
+                    oninput="checkSetupMatch()">
+                <div class="match-indicator" id="setupMatchIndicator"></div>
+            </div>
+
+            <button class="btn" type="submit" id="setupSubmitBtn" disabled>
+                Complete Setup
+            </button>
+
+        </form>
+
+        <div class="footer">
+            © <%= new Date().getFullYear() %> Attenddr. Australian Owned And Operated. All Rights Reserved.
+        </div>
+
+    </div>
+
+    <script>
+   const setupRules = {
+    length:  { el: document.getElementById('s-rule-length'),  test: v => v.length >= 8 },
+    upper:   { el: document.getElementById('s-rule-upper'),   test: v => /[A-Z]/.test(v) },
+    lower:   { el: document.getElementById('s-rule-lower'),   test: v => /[a-z]/.test(v) },
+    number:  { el: document.getElementById('s-rule-number'),  test: v => /[0-9]/.test(v) },
+    special: { el: document.getElementById('s-rule-special'), test: v => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(v) }
+};
+
+function evalRules() {
+    const val = document.getElementById('setupPassword').value;
+    let allMet = true;
+    for (const key in setupRules) {
+        const met = setupRules[key].test(val);
+        setupRules[key].el.classList.toggle('met', met);
+        if (!met) allMet = false;
+    }
+    return allMet;
+}
+
+function checkSetupRules() {
+    evalRules();
+    updateButton();
+}
+
+function checkSetupMatch() {
+    updateButton();
+}
+
+function updateButton() {
+    const pass      = document.getElementById('setupPassword').value;
+    const confirm   = document.getElementById('setupConfirm').value;
+    const indicator = document.getElementById('setupMatchIndicator');
+    const btn       = document.getElementById('setupSubmitBtn');
+    const allRules  = evalRules();
+
+    if (!confirm) {
+        indicator.textContent = '';
+        btn.disabled = true;
+        return;
+    }
+
+    if (pass === confirm && allRules) {
+        indicator.textContent = 'Passwords match';
+        indicator.className   = 'match-indicator match-ok';
+        btn.disabled = false;
+    } else if (pass !== confirm) {
+        indicator.textContent = 'Passwords do not match';
+        indicator.className   = 'match-indicator match-fail';
+        btn.disabled = true;
+    } else {
+        indicator.textContent = '';
+        btn.disabled = true;
+    }
+}
+
+document.getElementById('setupForm').addEventListener('submit', function(e) {
+    const allRules = evalRules();
+    const pass    = document.getElementById('setupPassword').value;
+    const confirm = document.getElementById('setupConfirm').value;
+    if (!allRules || pass !== confirm) {
+        e.preventDefault();
+        return false;
+    }
+});
+    </script>
+
+</body>
+</html>

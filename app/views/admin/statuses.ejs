@@ -1,0 +1,440 @@
+<%- include("../partials/header", {
+    pageTitle: "Attendr – Statuses",
+    activeTab: "statuses",
+    query: query,
+    pageStyles: `
+        table { width:100%; border-collapse:collapse; font-size:14px; }
+        th, td { padding:10px 12px; border-bottom:1px solid #ddd; text-align:left; }
+        th { font-size:13px; color:#444; background:#f4f7fb; }
+
+        .status-badge {
+            display:inline-block;
+            padding:6px 12px;
+            border-radius:8px;
+            font-size:12px;
+            font-weight:600;
+            color:white;
+        }
+
+        /* STATUS COLOUR CLASSES */
+        .black { background:#000; }
+        .darkgrey { background:#333; }
+        .grey { background:#777; }
+        .lightgrey { background:#ccc; color:#000; }
+        .white { background:#fff; color:#000; }
+
+        .navy { background:#001f3f; }
+        .blue { background:#005DFF; }
+        .sky { background:#66B2FF; }
+        .cyan { background:#00bcd4; }
+        .teal { background:#009688; }
+
+        .darkgreen { background:#014421; }
+        .green { background:#2ecc71; }
+        .lightgreen { background:#7bed9f; color:#000; }
+        .mint { background:#98ffcc; color:#000; }
+        .lime { background:#c6ff00; color:#000; }
+
+        .maroon { background:#800000; }
+        .red { background:#ff2f2f; }
+        .orange { background:#ff851b; }
+        .amber { background:#ffbf00; color:#000; }
+        .coral { background:#ff7f50; }
+
+        .purple { background:#7d3cff; }
+        .violet { background:#8e44ad; }
+        .indigo { background:#3f51b5; }
+        .magenta { background:#ff00aa; }
+        .pink { background:#ff78c4; }
+
+        .gold { background:#d4af37; }
+        .rose { background:#ffb6c1; color:#000; }
+        .slate { background:#6c7a89; }
+        .brown { background:#8b4513; }
+        .aqua { background:#30e3ca; }
+
+        .actions { text-align:right; padding-right:20px; }
+
+        /* ICON BUTTONS */
+        .delete-btn, .edit-btn {
+            background:none;
+            border:none;
+            cursor:pointer;
+            padding:4px;
+            transition:0.2s;
+        }
+
+        .delete-btn:hover, .edit-btn:hover {
+            transform:scale(1.12);
+            opacity:0.85;
+        }
+
+        .icon-trash, .icon-edit {
+            width:20px;
+            height:20px;
+            pointer-events:none;
+        }
+
+        .icon-trash { color:#d11a2a; }
+        .icon-edit { color:var(--primary-color); }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* POPUP */
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .popup-box {
+            width: 420px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        .popup-header {
+            padding: 18px 22px;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* CONTENT */
+        .popup-content {
+            padding: 24px 26px;
+            box-sizing: border-box;
+        }
+
+        .popup-content label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        /* 🔒 SCOPED INPUT STYLES (FIX) */
+        .popup-content input[type="text"],
+        .popup-content input[type="number"],
+        .popup-content input[type="password"],
+        .popup-content input[type="email"],
+        .popup-content input[type="hidden"],
+        .popup-content select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-bottom: 18px;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        /* STATUS RESET EXCLUSION – POLISH */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            margin-bottom: 18px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .checkbox-row input {
+            margin: 0;
+            position: relative;
+            top: -1px;
+        }
+
+        /* ACTIONS */
+        .popup-actions {
+            padding: 15px 25px;
+            background: #f5f5f5;
+            text-align: right;
+        }
+
+        .popup-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .popup-btn.cancel { background: #ddd; }
+        .popup-btn.save { background: var(--primary-color); color: white; }
+
+        /* COLOUR PICKER */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.15s;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.12);
+        }
+
+        /* Light colours visibility */
+        .color-swatch.white,
+        .color-swatch.lightgrey,
+        .color-swatch.mint,
+        .color-swatch.lime,
+        .color-swatch.rose,
+        .color-swatch.pink {
+            border: 2px solid #bbb !important;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+        }
+
+        .color-swatch.selected {
+            border-color: var(--accent-color) !important;
+            box-shadow: 0 0 6px rgba(0,0,0,0.3);
+        }
+    `
+}) %>
+
+<div class="section-title">Statuses</div>
+<div class="section-subtitle">Add, edit, or remove user status labels.</div>
+
+<div class="toolbar">
+    <button class="btn-primary" onclick="openAddStatus()">+ Add Status</button>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Colour</th>
+            <th>Sort</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <% if (statuses && statuses.length > 0) { %>
+            <% statuses.forEach(s => { %>
+                <tr>
+                    <td><%= s.name %></td>
+
+                    <td>
+                        <span class="status-badge <%= s.color %>">
+                            <%= s.name %>
+                        </span>
+                    </td>
+
+                    <td><%= s.sort_order %></td>
+
+                    <td class="actions">
+                        <% if (s.name !== 'Out of Office') { %>
+
+                            <button class="edit-btn" title="Edit" onclick='openEditStatus(<%- JSON.stringify(s) %>)'>
+                                <svg class="icon-edit" viewBox="0 0 24 24">
+                                    <path d="M4 21v-4l12-12 4 4-12 12H4z"
+                                          stroke="currentColor" stroke-width="2"
+                                          stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                                </svg>
+                            </button>
+
+                            <form method="POST" action="/admin/statuses/delete/<%= s.id %>" style="display:inline;">
+                                <button class="delete-btn" title="Delete">
+                                    <svg class="icon-trash" viewBox="0 0 24 24">
+                                        <path d="M3 6h18M9 6V4h6v2m-7 4v10m4-10v10m4-10v10M5 6l1 14h12l1-14"
+                                              stroke="currentColor" stroke-width="2"
+                                              stroke-linecap="round" stroke-linejoin="round"
+                                              fill="none"/>
+                                    </svg>
+                                </button>
+                            </form>
+
+                        <% } else { %>
+                            <span class="hint">System</span>
+                        <% } %>
+                    </td>
+                </tr>
+            <% }) %>
+        <% } else { %>
+            <tr><td colspan="4">No statuses found.</td></tr>
+        <% } %>
+    </tbody>
+</table>
+
+<!-- ADD STATUS POPUP -->
+<div id="addStatusPopup" class="popup-overlay">
+    <div class="popup-box">
+        <div class="popup-header">
+            <div>Add Status</div>
+            <button class="popup-close" onclick="closeAddStatus()">✖</button>
+        </div>
+
+        <form method="POST" action="/admin/statuses/add">
+            <div class="popup-content">
+                <label>Status Name</label>
+                <input type="text" name="name" required>
+
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" id="addSort" required>
+
+                <div class="checkbox-row">
+                    <input type="checkbox" name="exclude_from_reset" value="1">
+                    <span>Exclude from daily status reset</span>
+                </div>
+
+                <label>Colour</label>
+                <input type="hidden" name="color" id="addColor" value="blue">
+
+                <div class="color-grid">
+                    <% [
+                        "black","darkgrey","grey","lightgrey","white",
+                        "navy","blue","sky","cyan","teal",
+                        "darkgreen","green","lightgreen","mint","lime",
+                        "maroon","red","orange","amber","coral",
+                        "purple","violet","indigo","magenta","pink",
+                        "gold","rose","slate","brown","aqua"
+                    ].forEach(c => { %>
+                        <div class="color-swatch <%= c %>" data-target="addColor" data-color="<%= c %>"></div>
+                    <% }) %>
+                </div>
+            </div>
+
+            <div class="popup-actions">
+                <button type="button" class="popup-btn cancel" onclick="closeAddStatus()">Cancel</button>
+                <button type="submit" class="popup-btn save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- EDIT STATUS POPUP -->
+<div id="editStatusPopup" class="popup-overlay">
+    <div class="popup-box">
+        <div class="popup-header">
+            <div>Edit Status</div>
+            <button class="popup-close" onclick="closeEditStatus()">✖</button>
+        </div>
+
+        <form id="editStatusForm" method="POST">
+            <div class="popup-content">
+                <label>Status Name</label>
+                <input type="text" name="name" id="editName" required>
+
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" id="editSort" required>
+
+                <div class="checkbox-row">
+                    <input type="checkbox" name="exclude_from_reset" value="1" id="editExclude">
+                    <span>Exclude from daily status reset</span>
+                </div>
+
+                <label>Colour</label>
+                <input type="hidden" name="color" id="editColor">
+
+                <div class="color-grid">
+                    <% [
+                        "black","darkgrey","grey","lightgrey","white",
+                        "navy","blue","sky","cyan","teal",
+                        "darkgreen","green","lightgreen","mint","lime",
+                        "maroon","red","orange","amber","coral",
+                        "purple","violet","indigo","magenta","pink",
+                        "gold","rose","slate","brown","aqua"
+                    ].forEach(c => { %>
+                        <div class="color-swatch <%= c %>" data-target="editColor" data-color="<%= c %>"></div>
+                    <% }) %>
+                </div>
+            </div>
+
+            <div class="popup-actions">
+                <button type="button" class="popup-btn cancel" onclick="closeEditStatus()">Cancel</button>
+                <button type="submit" class="popup-btn save">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAddStatus() {
+        document.getElementById("addStatusPopup").style.display = "flex";
+        // select default swatch for add
+        document.querySelectorAll('[data-target="addColor"]').forEach(s => s.classList.remove("selected"));
+        const def = document.querySelector('.color-swatch.blue[data-target="addColor"]');
+        if (def) def.classList.add("selected");
+    }
+
+    function closeAddStatus() {
+        document.getElementById("addStatusPopup").style.display = "none";
+    }
+
+    function openEditStatus(status) {
+        if (status.name === "Out of Office") return; // system status – do not edit
+
+        document.getElementById("editName").value = status.name;
+        document.getElementById("editSort").value = status.sort_order;
+        document.getElementById("editColor").value = status.color;
+
+        // checkbox
+        document.getElementById("editExclude").checked = (status.exclude_from_reset == 1);
+
+        // set form action
+        document.getElementById("editStatusForm").action = "/admin/statuses/edit/" + status.id;
+
+        // highlight selected swatch for edit
+        document.querySelectorAll('[data-target="editColor"]').forEach(s => s.classList.remove("selected"));
+        const sel = document.querySelector('.color-swatch.' + status.color + '[data-target="editColor"]');
+        if (sel) sel.classList.add("selected");
+
+        document.getElementById("editStatusPopup").style.display = "flex";
+    }
+
+    function closeEditStatus() {
+        document.getElementById("editStatusPopup").style.display = "none";
+    }
+
+    // colour swatch selector (scoped by data-target)
+    document.querySelectorAll(".color-swatch").forEach(swatch => {
+        swatch.addEventListener("click", () => {
+            const target = swatch.dataset.target;
+            document.getElementById(target).value = swatch.dataset.color;
+
+            // only clear selected in THIS picker group
+            const group = swatch.parentElement.querySelectorAll('.color-swatch[data-target="' + target + '"]');
+            group.forEach(s => s.classList.remove("selected"));
+
+            swatch.classList.add("selected");
+        });
+    });
+</script>
+
+<%- include("../partials/footer") %>

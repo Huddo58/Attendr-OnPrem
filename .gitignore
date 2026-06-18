@@ -1,0 +1,28 @@
+# Dependencies & bundled runtime
+node_modules/
+runtime/
+node/
+node-v*.tar.xz
+
+# Databases & local data - NEVER commit
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets / per-machine config
+.env
+
+# User uploads - keep folders, ignore contents
+app/public/uploads/**
+!app/public/uploads/
+!app/public/uploads/avatars/
+!app/public/uploads/branding/
+!app/public/uploads/**/.gitkeep
+
+# Logs and editor noise
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

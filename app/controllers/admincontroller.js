@@ -10,6 +10,7 @@ const Status     = require("../models/statusModel");
 const Settings   = require("../models/settingsModel");
 const Branding   = require("../models/brandingModel");
 const License    = require("../models/licenseModel");
+const { THEMES } = require("../themes/index");
 const { logAction } = require("../utils/logger");
  
 // =====================================================
@@ -394,7 +395,7 @@ exports.saveBehaviourSettings = (req, res) => {
 
 exports.showBranding = (req, res) => {
     try {
-        res.render("admin/branding", { query: req.query });
+        res.render("admin/branding", { query: req.query, availableThemes: THEMES });
     } catch {
         res.send("Error loading branding.");
     }
@@ -495,6 +496,7 @@ exports.resetBranding = (req, res) => {
         }
  
         Branding.resetDefaults();
+        Branding.setTheme(null);
  
         logAction({
             action: "reset branding to defaults",
@@ -508,6 +510,31 @@ exports.resetBranding = (req, res) => {
     }
 };
  
+// =====================================================
+// THEME ENGINE
+// =====================================================
+
+exports.setTheme = (req, res) => {
+    try {
+        const { theme_key } = req.body;
+        const validKey = (theme_key && THEMES.find(t => t.key === theme_key))
+            ? theme_key
+            : null;
+
+        Branding.setTheme(validKey);
+
+        logAction({
+            action: validKey ? 'applied theme: ' + validKey : 'cleared active theme',
+            entity: 'branding',
+            user: req.session.user
+        });
+
+        res.redirect('/admin/settings/branding?theme_saved=1');
+    } catch {
+        res.send('Error applying theme.');
+    }
+};
+
 // =====================================================
 // AUDIT LOGS
 // =====================================================

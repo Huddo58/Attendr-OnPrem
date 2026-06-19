@@ -102,6 +102,40 @@ module.exports = {
                 primary_color = excluded.primary_color,
                 logo_path     = NULL
         `).run(DEFAULT_COLOR, DEFAULT_ACCENT, DEFAULT_COLOR);
+    },
+
+    // ---------------------------------------
+    // THEME ENGINE
+    // active_theme is NULL (use brand colour)
+    // or a theme key string from app/themes.
+    // The column is added at startup if absent.
+    // ---------------------------------------
+    ensureThemeColumn() {
+        try {
+            db.prepare(`ALTER TABLE branding_settings ADD COLUMN active_theme TEXT DEFAULT NULL`).run();
+        } catch {
+            // Column already exists — fine
+        }
+    },
+
+    getActiveTheme() {
+        try {
+            const row = db.prepare(`SELECT active_theme FROM branding_settings WHERE id = 1 LIMIT 1`).get();
+            return (row && row.active_theme) || null;
+        } catch {
+            return null;
+        }
+    },
+
+    setTheme(key) {
+        const value = key || null;
+        db.prepare(`
+            INSERT INTO branding_settings
+                (id, primary_color, accent_color, brand_color, logo_path, active_theme)
+            VALUES (1, ?, ?, ?, NULL, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                active_theme = excluded.active_theme
+        `).run(DEFAULT_COLOR, DEFAULT_ACCENT, DEFAULT_COLOR, value);
     }
 };
  

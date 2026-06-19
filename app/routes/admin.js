@@ -233,5 +233,8 @@ router.post("/settings/branding/logo/remove", requireAdmin, admin.removeLogo);
 // Reset everything to defaults
 router.post("/settings/branding/reset", requireAdmin, admin.resetBranding);
  
+
+// Set active theme (theme engine)
+router.post("/settings/branding/theme", requireAdmin, admin.setTheme);
 // -----------------------------------------------------
 module.exports = router;

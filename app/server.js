@@ -18,6 +18,9 @@ const initDatabase = require("./models/init");
 // GLOBAL MODELS
 const Branding = require("./models/brandingModel");
 const Settings = require("./models/settingsModel");
+
+// THEME ENGINE
+const { resolveTokens } = require("./themes/index");
  
 // JOBS
 const dailyStatusReset = require("./jobs/dailyStatusReset");
@@ -108,6 +111,7 @@ function startServer() {
  
     dailyStatusReset.startDailyStatusReset();
     ensureUploadDirs();
+    Branding.ensureThemeColumn();
  
     app.use(express.urlencoded({ extended: true }));
     app.use(express.json());
@@ -169,18 +173,24 @@ function startServer() {
             const brandColor = (settings && settings.brand_color) || "#0d2b4d";
             const lightColor = lightenBrandColor(brandColor);
  
+            const themeKey = (settings && settings.active_theme) || null;
+
             res.locals.branding = {
                 ...(settings || {}),
                 brand_color:       brandColor,
                 brand_color_light: lightColor,
-                logo_path:         (settings && settings.logo_path) || null
+                logo_path:         (settings && settings.logo_path) || null,
+                active_theme:      themeKey
             };
+            res.locals.themeTokens = resolveTokens(themeKey, brandColor, lightColor);
         } catch {
             res.locals.branding = {
                 brand_color:       "#0d2b4d",
                 brand_color_light: "#6ea0c8",
-                logo_path:         null
+                logo_path:         null,
+                active_theme:      null
             };
+            res.locals.themeTokens = resolveTokens(null, "#0d2b4d", "#6ea0c8");
         }
         next();
     });

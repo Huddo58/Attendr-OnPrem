@@ -273,6 +273,62 @@
             transition: opacity 0.15s;
         }
         .btn-danger:hover { opacity: 0.88; }
+
+        /* THEME PICKER */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .theme-tile {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .theme-tile:hover { transform: scale(1.03); }
+
+        .theme-tile.selected {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2563eb;
+        }
+
+        .theme-tile .theme-check {
+            display: none;
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .theme-tile.selected .theme-check { display: flex; }
+
+        .theme-swatch {
+            height: 70px;
+            width: 100%;
+        }
+
+        .theme-tile-label {
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+            background: #f8f9fc;
+            border-top: 1px solid #eee;
+        }
     `
 }) %>
 
@@ -286,6 +342,7 @@
 <% if (query.logo_saved)    { %><div class="alert alert-success">Logo uploaded successfully.</div><% } %>
 <% if (query.logo_removed)  { %><div class="alert alert-success">Logo removed. Default Attenddr logo restored.</div><% } %>
 <% if (query.reset)         { %><div class="alert alert-success">Branding reset to Attenddr defaults.</div><% } %>
+<% if (query.theme_saved)   { %><div class="alert alert-success">Theme applied successfully.</div><% } %>
 <% if (query.error)         { %><div class="alert alert-danger">Error: <%= decodeURIComponent(query.error) %></div><% } %>
 
 <div class="branding-grid">
@@ -440,6 +497,52 @@
 
 </div>
 
+<!-- THEME PICKER (full-width below the 2-col grid) -->
+<%
+const AVAILABLE_THEMES = availableThemes || [];
+const activeThemeKey = branding.active_theme || null;
+%>
+<div class="brand-card" style="margin-top:24px;">
+    <div class="brand-card-header">
+        Seasonal &amp; Themed Looks
+        <div class="card-sub">
+            Applies a full colour scheme to the header, background and chrome.
+            Select "Custom Brand Colour" to return to your chosen gradient.
+        </div>
+    </div>
+    <div class="brand-card-body">
+        <form method="POST" action="/admin/settings/branding/theme" id="themeForm">
+            <input type="hidden" name="theme_key" id="themeKeyInput" value="<%= activeThemeKey || '' %>">
+
+            <div class="theme-grid">
+
+                <!-- None / Custom tile -->
+                <div class="theme-tile <%= !activeThemeKey ? 'selected' : '' %>"
+                     onclick="selectTheme('', this)">
+                    <span class="theme-check">✓</span>
+                    <div class="theme-swatch" style="background: linear-gradient(to bottom right,
+                        <%= branding.brand_color_light || '#6ea0c8' %>,
+                        <%= branding.brand_color || '#0d2b4d' %>);"></div>
+                    <div class="theme-tile-label">Custom Brand Colour</div>
+                </div>
+
+                <% AVAILABLE_THEMES.forEach(function(t) { %>
+                <div class="theme-tile <%= activeThemeKey === t.key ? 'selected' : '' %>"
+                     onclick="selectTheme('<%= t.key %>', this)">
+                    <span class="theme-check">✓</span>
+                    <div class="theme-swatch" style="background: linear-gradient(to bottom right,
+                        <%= t.tokens.bg_start %>, <%= t.tokens.bg_end %>);"></div>
+                    <div class="theme-tile-label"><%= t.label %></div>
+                </div>
+                <% }); %>
+
+            </div>
+
+            <button type="submit" class="btn-save">Apply Theme</button>
+        </form>
+    </div>
+</div>
+
 <script>
 let currentColor = '<%= (branding.brand_color || "#0d2b4d").toLowerCase() %>';
 
@@ -510,6 +613,12 @@ function onLogoSelected(input) {
         document.getElementById('logoPreviewImg').src = e.target.result;
     };
     reader.readAsDataURL(input.files[0]);
+}
+
+function selectTheme(key, el) {
+    document.querySelectorAll('.theme-tile').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('themeKeyInput').value = key;
 }
 </script>
 

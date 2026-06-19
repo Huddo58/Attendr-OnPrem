@@ -6,9 +6,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Attenddr – Kiosk</title>
 <style>
-<%
-    const brandColor = branding?.brand_color || '#0d2b4d';
-%>
+    <% const tk = themeTokens; %>
+    :root {
+        --theme-bg-start:            <%= tk.bg_start %>;
+        --theme-bg-end:              <%= tk.bg_end %>;
+        --theme-header-bg:           <%= tk.header_bg %>;
+        --theme-header-border:       <%= tk.header_border %>;
+        --theme-header-text:         <%= tk.header_text %>;
+        --theme-text-heading:        <%= tk.text_heading %>;
+        --theme-text-on-chrome:      <%= tk.text_on_chrome %>;
+        --theme-accent:              <%= tk.accent %>;
+        --theme-accent-text:         <%= tk.accent_text %>;
+        --theme-footer-text:         <%= tk.footer_text %>;
+    }
+</style>
+<style>
        html, body {
            margin: 0;
            height: 100%;
@@ -19,11 +31,10 @@
            display: flex;
            flex-direction: column;
            font-family: "Inter", Arial, sans-serif;
-           /* ✅ Dynamic gradient from branding settings */
            background: linear-gradient(
                to bottom right,
-               <%= branding.brand_color_light || '#6ea0c8' %>,
-               <%= brandColor %>
+               var(--theme-bg-start),
+               var(--theme-bg-end)
            );
            color: #1a1a1a;
        }
@@ -31,14 +42,14 @@
        .header {
            height: 70px;
            flex: 0 0 70px;
-           background: rgba(255,255,255,0.10);
+           background: var(--theme-header-bg);
            backdrop-filter: blur(8px);
            display: flex;
            align-items: center;
            justify-content: space-between;
            padding: 0 36px;
-           border-bottom: 1px solid rgba(255,255,255,0.25);
-           color: #fff;
+           border-bottom: 1px solid var(--theme-header-border);
+           color: var(--theme-header-text);
        }
        .logo {
            width: 150px;
@@ -109,7 +120,7 @@
        .staff-name {
            font-size: clamp(14px, 2vw, 18px);
            font-weight: 600;
-           color: #0d2b4d;
+           color: var(--theme-text-heading);
            line-height: 1.25;
            margin-bottom: 6px;
            display: -webkit-box;

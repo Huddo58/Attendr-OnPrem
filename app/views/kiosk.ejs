@@ -10,6 +10,8 @@
     :root {
         --theme-bg-start:            <%= tk.bg_start %>;
         --theme-bg-end:              <%= tk.bg_end %>;
+        --theme-bg-image:            <%= tk.bg_image %>;
+        --theme-bg-overlay:          <%= tk.bg_overlay %>;
         --theme-header-bg:           <%= tk.header_bg %>;
         --theme-header-border:       <%= tk.header_border %>;
         --theme-header-text:         <%= tk.header_text %>;
@@ -31,11 +33,12 @@
            display: flex;
            flex-direction: column;
            font-family: "Inter", Arial, sans-serif;
-           background: linear-gradient(
-               to bottom right,
-               var(--theme-bg-start),
-               var(--theme-bg-end)
-           );
+           background-image:
+               linear-gradient(var(--theme-bg-overlay), var(--theme-bg-overlay)),
+               var(--theme-bg-image),
+               linear-gradient(to bottom right, var(--theme-bg-start), var(--theme-bg-end));
+           background-size: cover;
+           background-position: center;
            color: #1a1a1a;
        }
        /* ================= HEADER ================= */
@@ -193,14 +196,14 @@
 </style>
 </head>
 <body>
+<%- include('partials/theme-decorations') %>
 
 <div class="header">
     <div class="logo">
         <%
-            /* ✅ Use custom logo if set, otherwise fall back to Attenddr default */
-            const kioskLogo = (branding && branding.logo_path)
-                ? branding.logo_path
-                : '/img/attendr.png';
+            const kioskLogo = tk.logo_image
+                ? tk.logo_image
+                : ((branding && branding.logo_path) ? branding.logo_path : '/img/attendr.png');
         %>
         <img src="<%= kioskLogo %>" alt="Logo">
     </div>

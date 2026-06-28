@@ -20,7 +20,7 @@ const Branding = require("./models/brandingModel");
 const Settings = require("./models/settingsModel");
 
 // THEME ENGINE
-const { resolveTokens } = require("./themes/index");
+const { resolveTokens, getTheme } = require("./themes/index");
  
 // JOBS
 const dailyStatusReset = require("./jobs/dailyStatusReset");
@@ -182,7 +182,8 @@ function startServer() {
                 logo_path:         (settings && settings.logo_path) || null,
                 active_theme:      themeKey
             };
-            res.locals.themeTokens = resolveTokens(themeKey, brandColor, lightColor);
+            res.locals.themeTokens  = resolveTokens(themeKey, brandColor, lightColor);
+            res.locals.activeTheme  = getTheme(themeKey) || null;
         } catch {
             res.locals.branding = {
                 brand_color:       "#0d2b4d",
@@ -191,6 +192,7 @@ function startServer() {
                 active_theme:      null
             };
             res.locals.themeTokens = resolveTokens(null, "#0d2b4d", "#6ea0c8");
+            res.locals.activeTheme = null;
         }
         next();
     });

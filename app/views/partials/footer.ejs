@@ -1,6 +1,7 @@
 </div> <!-- END content-wrapper -->
 
 <div class="footer">
+    <% if (typeof themeTokens !== "undefined" && themeTokens && themeTokens.footer_tagline) { %><div class="footer-tagline" style="font-weight:600;margin-bottom:4px;color:var(--theme-footer-text);"><%= themeTokens.footer_tagline %></div><% } %>
     © <%= new Date().getFullYear() %> Attendr. Australian Owned And Operated.
 </div>
 

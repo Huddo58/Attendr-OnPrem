@@ -8,15 +8,40 @@
 <title>Attendr Dashboard</title>
 
 <style>
-    body {
+<% const tk = themeTokens; %>
+:root {
+    --theme-bg-start:            <%= tk.bg_start %>;
+    --theme-bg-end:              <%= tk.bg_end %>;
+    --theme-bg-image:            <%= tk.bg_image %>;
+    --theme-bg-overlay:          <%= tk.bg_overlay %>;
+    --theme-header-bg:           <%= tk.header_bg %>;
+    --theme-header-border:       <%= tk.header_border %>;
+    --theme-header-text:         <%= tk.header_text %>;
+    --theme-header-banner:       <%= tk.header_banner %>;
+    --theme-header-banner-blend: <%= tk.header_banner_blend %>;
+    --theme-tabs-bg:             <%= tk.tabs_bg %>;
+    --theme-tabs-border:         <%= tk.tabs_border %>;
+    --theme-card-bg:             <%= tk.card_bg %>;
+    --theme-text-on-chrome:      <%= tk.text_on_chrome %>;
+    --theme-text-heading:        <%= tk.text_heading %>;
+    --theme-accent:              <%= tk.accent %>;
+    --theme-accent-text:         <%= tk.accent_text %>;
+    --theme-popup-header-bg:     <%= tk.popup_header_bg %>;
+    --theme-popup-header-text:   <%= tk.popup_header_text %>;
+    --theme-footer-text:         <%= tk.footer_text %>;
+}
+
+body {
         margin: 0;
         padding: 0;
         font-family: "Inter", Arial, sans-serif;
-        background: linear-gradient(
-            to bottom right,
-            var(--theme-bg-start),
-            var(--theme-bg-end)
-        );
+        background-image:
+            linear-gradient(var(--theme-bg-overlay), var(--theme-bg-overlay)),
+            var(--theme-bg-image),
+            linear-gradient(to bottom right, var(--theme-bg-start), var(--theme-bg-end));
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
         min-height: 100vh;
         color: #1a1a1a;
     }
@@ -25,7 +50,11 @@
     .header {
         width: 100%;
         height: 95px;
-        background: var(--theme-header-bg);
+        background-color: var(--theme-header-bg);
+        background-image: var(--theme-header-banner);
+        background-blend-mode: var(--theme-header-banner-blend);
+        background-size: cover;
+        background-position: center;
         backdrop-filter: blur(8px);
         display: flex;
         align-items: center;
@@ -49,7 +78,7 @@
     }
 
     .org-name {
-        color: #fff;
+        color: var(--theme-header-text);
         font-size: 18px;
         font-weight: 700;
         letter-spacing: 0.2px;
@@ -70,8 +99,8 @@
         padding: 7px 14px;
         border-radius: 20px;
         border: none;
-        background: rgba(255,255,255,0.18);
-        color: #fff;
+        background: var(--theme-accent);
+        color: var(--theme-accent-text);
         font-size: 13px;
         font-weight: 600;
         text-decoration: none;
@@ -79,7 +108,7 @@
     }
 
     .admin-btn:hover {
-        background: rgba(255,255,255,0.28);
+        filter: brightness(1.08);
     }
 
     /* Search box */
@@ -99,7 +128,7 @@
     }
 
     .user-meta {
-        color: #fff;
+        color: var(--theme-header-text);
         font-size: 13px;
         white-space: nowrap;
         display: flex;
@@ -108,7 +137,7 @@
     }
 
     .user-meta a {
-        color: #fff;
+        color: var(--theme-header-text);
         text-decoration: none;
         font-weight: 500;
     }
@@ -167,11 +196,15 @@
     }
 
     .tab.active {
-        border-bottom: 2px solid white;
+        border-bottom: 2px solid var(--theme-accent);
     }
 
     /* TABLE WRAPPER */
+        .panel-deco { position: absolute; pointer-events: none; user-select: none; z-index: 5; }
+    .panel-deco--bl { bottom: -40px; left: -26px; width: 140px; }
+
     .table-wrapper {
+        position: relative;
         width: 85%;
         margin: 30px auto;
         background: rgba(255,255,255,0.90);
@@ -480,6 +513,7 @@
 </head>
 
 <body>
+<%- include('partials/theme-decorations') %>
 
 <%
     const currentUserName = (user && user.name) ? user.name : "User";
@@ -491,7 +525,12 @@
 <div class="header">
     <div class="header-left">
         <div class="logo">
-            <img src="<%= (branding && branding.logo_path) ? branding.logo_path : '/img/attendr.png' %>" alt="Logo">
+            <%
+                const dashLogoSrc = tk.logo_image
+                    ? tk.logo_image
+                    : ((branding && branding.logo_path) ? branding.logo_path : '/img/attendr.png');
+            %>
+            <img src="<%= dashLogoSrc %>" alt="Logo">
         </div>
         <div class="org-name"><%= (settings && settings.org_name) ? settings.org_name : "Attendr" %></div>
     </div>
@@ -546,7 +585,8 @@
 
 
 <!-- TABLE -->
-<div class="table-wrapper">
+<div class="table-wrapper<%= (themeTokens.decorations && themeTokens.decorations.table_border) ? ' candy-frame' : '' %>">
+    <% if (themeTokens.decorations && themeTokens.decorations.panel_front_bl) { %><img class="panel-deco panel-deco--bl" src="<%= themeTokens.decorations.panel_front_bl %>" alt="" aria-hidden="true"><% } %>
     <table id="staffTable">
         <thead>
             <tr>
@@ -636,6 +676,7 @@
 <!-- FOOTER -->
 <div class="footer">
     © <%= new Date().getFullYear() %> Attendr. Australian Owned And Operated. All Rights Reserved.
+    <% if (tk.footer_tagline) { %><br><%= tk.footer_tagline %><% } %>
 </div>
 
 <!-- UPDATE STATUS POPUP -->
